@@ -23,7 +23,7 @@ python3 -m venv tutorial-env
 source tutorial-env/bin/activate
 ```
  
-- Install the python libraries provided in the `requiremets.txt` file:
+- Install the python libraries provided in the `requirements.txt` file:
  
 ```Bash
 python3 -m pip install -r requirements.txt
