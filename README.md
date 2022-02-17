@@ -1,5 +1,9 @@
 # EM domain adaptation
                                                                                                                         
+<p align="center">
+  <img src="./img/DAoverview.png" width="800"></a>
+</p>
+
 This repository contains domain adaptation approaches for mitochondria segmentation in electron microscopy (EM) volumes.
 Here is described the details on how the results reported in our paper can be reproduced. 
 

@@ -2,7 +2,9 @@
 
 Domain adaptation can be considered a style-transfer problem so in our paper we decide to study recently added Contrastive Unpaired Translation (CUT) [1].
 
-<img src="./img/cut_view.png" width="600"></a>
+<p align="center">                                                                                                      
+  <img src="./img/cut_view.png" width="600"></a>       
+</p>  
 
 You can reproduce the stylization made following these steps:
 
