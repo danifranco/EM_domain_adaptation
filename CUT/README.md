@@ -27,8 +27,8 @@ cd CUT
 
 - Prepare the data. You will need two directories:
 
-* `trainA`: to store the target dataset
-* `trainB`: to store the source dataset
+    - `trainA`: to store the target dataset
+    - `trainB`: to store the source dataset
 
 - Train the network
 ```Bash

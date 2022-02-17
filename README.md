@@ -13,7 +13,6 @@ We presented four different domain adaptation approaches (each one containing it
 ## Datasets
 
 EM datasets used on this work:
-- [Lucchi](https://www.epfl.ch/labs/cvlab/data/data-em/ "EPFL")
 - [Lucchi++](https://sites.google.com/view/connectomics/ "Lucchi++")
 - [Kasthuri++](https://sites.google.com/view/connectomics/ "Kasthuri++")
 - [VNC](https://github.com/unidesigner/groundtruth-drosophila-vnc "VNC")
