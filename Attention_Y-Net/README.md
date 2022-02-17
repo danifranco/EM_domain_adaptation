@@ -1,6 +1,6 @@
 # Attention Y-Net
  
-Domain adaptation can be considered a transfer learning problem, so in our paper we decide to study Y-Net [1] like architecture, but using Attention U-Net [2] as a base architecture.
+Domain adaptation can be considered a transfer learning problem, so in our paper we decide to study Y-Net [1] like architecture, but using Attention U-Net [2,3] as a base architecture.
  
 <img style="display: block;
         margin-left: auto;
