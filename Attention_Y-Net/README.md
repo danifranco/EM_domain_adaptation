@@ -97,9 +97,11 @@ cd EM_domain_adaptation/Attention_Y-Net
 ## References
  
 ```
-[1] Joris Roels, Julian Hennies, Yvan Saeys, Wilfried Philips, & Anna Kreshuk. (2018). Domain Adaptive Segmentation in Volume Electron Microscopy Imaging.
+[1] Roels, J., Hennies, J., Saeys, Y., Philips, W. and Kreshuk, A., 2019, April. Domain adaptive segmentation in volume electron microscopy imaging. In 2019 IEEE 16th International Symposium on Biomedical Imaging (ISBI 2019) (pp. 1519-1522). IEEE.
  
-[2] Ozan Oktay, Jo Schlemper, Loic Le Folgoc, Matthew Lee, Mattias Heinrich, Kazunari Misawa, Kensaku Mori, Steven McDonagh, Nils Y Hammerla, Bernhard Kainz, Ben Glocker, & Daniel Rueckert. (2018). Attention U-Net: Learning Where to Look for the Pancreas.
+[2] Oktay, O., Schlemper, J., Folgoc, L.L., Lee, M., Heinrich, M., Misawa, K., Mori, K., McDonagh, S., Hammerla, N.Y., Kainz, B. and Glocker, B., 2018. Attention u-net: Learning where to look for the pancreas. arXiv preprint arXiv:1804.03999.
+
+[3] Franco-Barranco, D., Muñoz-Barrutia, A. and Arganda-Carreras, I., 2021. Stable deep neural network architectures for mitochondria segmentation on electron microscopy volumes. Neuroinformatics, pp.1-14.
 ```
  
  
