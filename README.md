@@ -1,22 +1,22 @@
-# EM domain adaptation
-                                                                                                                        
+# Deep learning based domain adaptation for mitochondria segmentation on EM volumes
+                                                                                                                       
+This repository contains the code to reproduce the methods described in the publication entitled "Deep learning based domain adaptation for mitochondria segmentation on EM volumes". 
+
+For the code and detailed instructions of the four different implemented strategies is available here:
+
+- [Style-transfer based domain adaptation](CUT).
+- [Self-supervised learning (SSL) based domain adpation](SSL).
+- [DAMT-Net](DAMT-Net).
+- [Attention_Y-Net](Attention_Y-Net).
+
+Qualitative results of all methods are summarized in the next figure:
 <p align="center">
   <img src="./img/DAoverview.png" width="800"></a>
 </p>
 
-This repository contains domain adaptation approaches for mitochondria segmentation in electron microscopy (EM) volumes.
-Here is described the details on how the results reported in our paper can be reproduced. 
-
-We presented four different domain adaptation approaches (each one containing its own details):
-
-- Style transfer with CUT. [Here](CUT) to a full description.
-- Self supervised approach. [Here](SSL) to a full description.
-- [DAMT-Net](DAMT-Net) to a full description.
-- [Attention_Y-Net](Attention_Y-Net) to a full description.
-
 ## Datasets
 
-EM datasets used on this work:
+The EM datasets used are available here:
 - [Lucchi++](https://sites.google.com/view/connectomics/ "Lucchi++")
 - [Kasthuri++](https://sites.google.com/view/connectomics/ "Kasthuri++")
 - [VNC](https://github.com/unidesigner/groundtruth-drosophila-vnc "VNC")
