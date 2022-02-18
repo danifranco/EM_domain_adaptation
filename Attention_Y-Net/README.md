@@ -1,6 +1,6 @@
 # Attention Y-Net
  
-Domain adaptation can be considered a transfer learning problem, so in our paper we decide to study Y-Net [1] like architecture, but using Attention U-Net [2,3] as a base architecture.
+Domain adaptation can also be addressed using multi-task networks. In our paper, we propose a novel architecture that builds on top of the Y-Net [1], but using a stable U-Net with attention gates [2,3] as base architecture.
  
 <img style="display: block;
         margin-left: auto;
