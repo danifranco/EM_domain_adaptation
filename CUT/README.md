@@ -1,12 +1,12 @@
-# Style transfer for domain adaptation
+# Style transfer for domain adaptation in EM volumes
 
-Domain adaptation can be considered a style-transfer problem so in our paper we decide to study recently added Contrastive Unpaired Translation (CUT) [1].
+Domain adaptation can be considered a style-transfer problem. Therefore, one of our solutions for EM volumes consists on using the state-of-the-art Contrastive Unpaired Translation (CUT) [1] method to convert the target domain images to the "style" of the source domain. Next, we can apply the segmentation models previously trained on the labeled source data.
 
 <p align="center">                                                                                                      
   <img src="./img/cut_view.png" width="600"></a>       
 </p>  
 
-You can reproduce the stylization made following these steps:
+You can reproduce the stylization processed carried out in our paper following these steps:
 
 - Create a [Conda](https://docs.conda.io/projects/conda/en/latest/index.html) environment with the `.yml` provided here:
 
