@@ -2,7 +2,7 @@
                                                                                                                        
 This repository contains the code to reproduce the methods described in the publication entitled "Deep learning based domain adaptation for mitochondria segmentation on EM volumes". 
 
-For the code and detailed instructions of the four different implemented strategies is available here:
+The code and detailed instructions of the four different implemented strategies are available in the following links:
 
 - [Style-transfer based domain adaptation](CUT).
 - [Self-supervised learning (SSL) based domain adpation](SSL).
