@@ -45,4 +45,5 @@ This notebook will generate in `out_dir` all `datasets` combination histogram ma
 Each combination will be identified first by the folders name. First folder indicate which is the Source dataset. Inside this folder, multiple ones can be generated, the name has the following format: "(source)_s-t_(target)". Inside those folders, the distribution will be as the original one (train, test, train/x, train/y, ...).
 
 ## License
-The copyright of the original `_match_cumulative_cdf` function, we used as a base, is in [LICENSE](LICENSE) .
+The copyright of the original `_match_cumulative_cdf` function, we used as a base, is in [LICENSE](LICENSE) . 
+This function corresponds to the [scikit implementation](https://github.com/scikit-image/scikit-image/blob/e128e0743bb2cded104654352a13ed5b4e53efb8/skimage/exposure/histogram_matching.py#L4) of the histogram matching. 
