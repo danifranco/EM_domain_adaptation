@@ -60,9 +60,10 @@ cd EM_domain_adaptation/Attention_Y-Net
         ```
         Image and labels will be matched by the filename order, so it is important to keep the same order.
 
-    - You will need two directories:
+    - You will need at least two directories:
         * `trainA`: to store the target dataset. Target dataset does not need `y/` folder with the labels. You only need `test/y` in the `test` section if you want to evaluate the model.
         * `trainB`: to store the source dataset.
+        * (if you want to try more combinations, you can add more)
    
 - Train and evaluate the network:
 
