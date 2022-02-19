@@ -1,0 +1,11 @@
+albumentations==1.1.0
+matplotlib==3.4.3
+nibabel==3.2.1
+numpy==1.21.4
+opencv-python-headless==4.5.4.58
+Pillow==7.0.0
+scikit_image==0.18.3
+scipy==1.7.2
+SimpleITK==2.1.1
+torch==1.11.0.dev20211106+cu111
+torchvision==0.12.0.dev20211106+cu111
