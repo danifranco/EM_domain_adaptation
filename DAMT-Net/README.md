@@ -1,8 +1,8 @@
-# Attention Y-Net
+# DAMT-Net
 
 Domain adaptation can also be addressed using adversarial networks, as DAMT-Net [1] does.
 
-We are going to use the [original DAMT-Net](https://github.com/Jiajin-Yi/DAMT-Net) repository fork and a custom script to train and test sequentially every combinations, the number of repetitions you want (by default, 10).
+We are going to use the [original DAMT-Net](https://github.com/Jiajin-Yi/DAMT-Net) repository fork and a custom script to train and test sequentially every combination, the number of repetitions you want (by default, 10).
 
 ## Usage
 
@@ -35,7 +35,7 @@ cd EM_domain_adaptation/DAMT-Net
 
 - Prepare the data.
 
-    - Each data directory must be organized as follows:
+    - Each data or domain directory must be organized as follows:
 
         ```
         data/
@@ -58,36 +58,38 @@ cd EM_domain_adaptation/DAMT-Net
         Image and labels will be matched by the filename order, so it is important to keep the same order.
 
     - You will need at least two directories:
-        * `trainA`: to store the target dataset.
-        * `trainB`: to store the source dataset.
-        * (if you want to try more combinations, you can add more)
+        * `A_domain`: to store the A-Domain dataset.
+        * `B_domain`: to store the B-Domain dataset.
+        * If you want to try more combinations, you can add more.
+
+        As an example those used in our paper are: `Lucchi++`, `VNC` and `Kasthuri++`.
 
     - Now, using [prep_EM_data](prep_EM_data.ipynb) notebook, convert the data organization to be used in the following steps. To do that, you only need to specify the directories in the first cell of the notebook and run all.
-   
+
 - Train and evaluate the network using the `LongTrainTest_all_DAMT.py`:
 
     You only need to change variable values in the `Parameters` section and run all:
-        
+
     1) Specify the path of your data in the `dataset_path` variable.
-    2) Specify in one list, in the `datasets` variable, the datasets (directory names) you want to use from `dataset_path`. 
+    2) Specify in one list, in the `datasets` variable, the datasets (directory names) you want to use from `dataset_path`.
 
-        **Note:** from this list all possible combinations will be trained and tested.
+        **Note:** From this list, all possible combinations will be trained and tested.
 
-    3) Change as you want the values of the rest of the parameters. 
+    3) Change as you want the values of the rest of the parameters.
 
-        **Note:** Default values are those presented in the paper. If you want to reproduce paper's results keep the default values.
+        **Note:** Default values are those presented in the paper. If you want to reproduce the paper's results, keep the default values.
 
     4) Run all.
         ```Bash
         python3 LongTrainTest_all_DAMT.py
         ```
-    This will generate inside the [DAMT-Net_repo](DAMT-Net_repo) respository (inside `results` folder, by default), three different `.json` file with all the results, where `matrix per repetition` contains the IOU value obtained in the test set of the target dataset, in the last training step of each repetition. `mean matrix` Contains the mean values among all the repetitions, and `std matrix` the standard deviation. Each json is identified by the filename, where:
+    This will generate inside the [DAMT-Net_repo](DAMT-Net_repo) repository (inside `results` folder, by default), three different `.json` files with all the results, where `matrix per repetition` contains the IOU value obtained in the test set of the target dataset, in the last training step of each repetition. `mean matrix` Contains the mean values among all the repetitions, and `std matrix` the standard deviation. Each `.json` is identified by the filename, where:
 
     - `Results_DAMT-Net_x10(ARA).json`: contain results using ARA stop criteria.
     - `Results_DAMT-Net_x10(val).json`: contain results using the best validation epoch.
     - `Results_DAMT-Net_x10(last).json` contain results using last training epoch.
 
-    If you want to see cleaner the execution results of the `.json` you can use the [json2mat](../Attention_Y-Net/json2mat.ipynb) notebook, from `Attention_Y-Net` folder. Just especify the json path and run all.
+    If you want to see cleaner the execution results of the `.json` you can use the [json2mat](../Attention_Y-Net/json2mat.ipynb) notebook, from `Attention_Y-Net` folder. Just specify the `.json` path and run all.
 
     Finally, the weights of each model and predicted masks will be stored.
 

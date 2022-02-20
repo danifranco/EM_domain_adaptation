@@ -38,7 +38,7 @@ cd EM_domain_adaptation/Attention_Y-Net
 
 - Prepare the data.
 
-    - Each data directory must be organized as follows:
+    - Each data or domain directory must be organized as follows:
 
         ```
         data/
@@ -61,29 +61,35 @@ cd EM_domain_adaptation/Attention_Y-Net
         Image and labels will be matched by the filename order, so it is important to keep the same order.
 
     - You will need at least two directories:
-        * `trainA`: to store the target dataset. Target dataset does not need `y/` folder with the labels. You only need `test/y` in the `test` section if you want to evaluate the model.
-        * `trainB`: to store the source dataset.
-        * (if you want to try more combinations, you can add more)
-   
+        * `A_domain`: to store the A-domain dataset.
+        * `B_domain`: to store the B-domain dataset.
+        * If you want to try more combinations, you can add more.
+        
+        As an example those used in our paper are: `Lucchi++`, `VNC` and `Kasthuri++`.
+
+        Which domain is the source and target one, will be specified later.
+
+        If you are going to train a single combination, for example, source: A-domain and target: B-domain, target labels (`"y/"` folders) will not be needed. You will only need `test/y` in the `test` section if you want to evaluate the model.
+
 - Train and evaluate the network:
 
     * **Step by step**: Using the `Att_YNet_Notebook.ipynb`.
-       
+
         You only need to change variable values in the `Parameters` section and run all:
-           
+
         1) Specify the path of your data in the `data_path` variable.
-        2) Specify from `data_path` the directory name with the `source` dataset and the directory name with `target` dataset.
-        3) Change as you want the values of the rest of the parameters. Depending on the Training step you should use different ones, as for example the `alpha` value. By default, the last training step parameters are set.
+        2) Specify from `data_path` the directory name with the source dataset and the directory name with target dataset, in `source` and `target` named variables.
+        3) Change as you want the values of the rest of the parameters. Depending on the training step, you should use different ones, as for example the `alpha` value. By default, the last training step parameters are set.
         4) Run all.
- 
+
     * **All at once**: Using the `Att_YNet.py`.
-       
+
         You only need to change variable values in the `Parameters` section and run all:
-           
+
         1) Specify the path of your data in the `dataset_path` variable.
-        2) Specify in one list, in the `datasets` variable, the datasets (directory names) you want to use from `dataset_path`. 
-        
-            **Note:** from this list all possible combinations will be trained the 3 steps and tested also.
+        2) Specify in one list, in the `datasets` variable, the datasets (directory names) you want to use from `dataset_path`.
+
+            **Note:** From this list, all possible combinations will be trained the 3 steps and tested also.
 
         3) Change as you want the values of the rest of the parameters. Those variables, with a list of 3 values, contain in order the value that will be used in each training step.
 
@@ -97,8 +103,8 @@ cd EM_domain_adaptation/Attention_Y-Net
             * Last epoch:
                 - custom_callback = [False, False, False]
                 - patience = [7,6,150]
-        
-            **Note:** Default values are those presented in the paper. If you want to reproduce paper's results using ARA, just keep this parameters.
+
+            **Note:** Default values are those presented in the paper. If you want to reproduce paper's results using ARA, just keep these parameters.
 
         4) Run all.
             ```Bash
@@ -106,10 +112,9 @@ cd EM_domain_adaptation/Attention_Y-Net
             ```
         This will generate, a `.json` file with all the results, where `matrix per repetition` contains the IOU value obtained in the test set of the target dataset, in the last training step of each repetition. `mean matrix` Contains the mean values among all the repetitions, and `std matrix` the standard deviation. Also, a `errors.log` will be generated with all the errors produced during the execution.
 
-        If you want to see cleaner the execution results of the `.json` you can use the [json2mat](json2mat.ipynb) notebook. Just especify the json path and run all.
-       
-        Finally, the weights of each model will be stored. The names of the weights indicate some information about the model: the training step (weights0, for the first step, weights1 for the second, ...), the repetition (r-0, r-1, ...), folder used as a source dataset (src-Kasthuri++, ...), folder used as a target dataset (trg-VNC, ...) and some training parameters.
+        If you want to see cleaner the execution results of the `.json` you can use the [json2mat](json2mat.ipynb) notebook. Just specify the `.json` file path and run all.
 
+        Finally, the weights of each model will be stored. The names of the weights indicate some information about the model: the training step (weights0, for the first step, weights1 for the second, ...), the repetition (r-0, r-1, ...), folder used as a source dataset (src-Kasthuri++, ...), folder used as a target dataset (trg-VNC, ...) and some training parameters.
 
 ## References
 
