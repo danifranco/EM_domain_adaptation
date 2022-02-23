@@ -4,7 +4,7 @@
         margin-left: auto;
         margin-right: auto;
         width: 90%;"
-     src="./SSL_diagram.pdf">
+     src="./SSL_diagram.svg">
 </img>
 
 You can train and use the model with your data following these steps:
