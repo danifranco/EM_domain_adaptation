@@ -72,8 +72,9 @@ python3 -m pip install -r requirements.txt
     * **Step by step**: Using the `.py` files.
 
         1) Adjust hyperparameter values as well as your file paths in the `Hyperparameters.py` section and run all.
-            1.1) It is worth noting that the paths in the hyperparameters file include two options, the regular image path and a secondary path to include the histogram matched files path.
-            1.2) If you don't care about histogram_matching you can just specify False in the hm option and ignore this parameter.
+        
+            1) It is worth noting that the paths in the hyperparameters file include two options, the regular image path and a secondary path to include the histogram matched files path.
+            2) If you don't care about histogram_matching you can just specify False in the hm option and ignore this parameter.
         2) Run the SSL_Seg.py from your python environment.
 
        
