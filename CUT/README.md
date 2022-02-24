@@ -56,6 +56,13 @@ python test.py --dataroot --name $job_name --preprocess none --input_nc 1 \
 These last command will create the folder ``/home/user/CUT_test/results/CUT_test/train_*/images/fake_B``
 where the stylized images of `trainA` samples are placed. 
 
+- After applying the stylization we need to check how it improves the segmentation using target images. To remember, the
+main idea was to train a network in a source domain and pass through the network target domain images. For that purpose
+we used in our paper the Attention 2D U-Net as baseline so you can fed it with the raw target domain images and with the 
+stylized ones to check the improvement. That network can be trained using [this code](https://github.com/danifranco/EM_Image_Segmentation)
+and using [attention_unet_2d.yaml](https://github.com/danifranco/EM_Image_Segmentation/blob/master/templates/attention_unet_2d.yaml)
+as template configuration file.
+
 ## References
 
 ```
