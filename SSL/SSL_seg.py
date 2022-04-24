@@ -618,8 +618,3 @@ plt.title('GT labels')
 plt.suptitle(Source+' trained model to '+Target +'\n with IoU:'+str(np.mean(IoU_Source2Target))+'$\pm$'+str(np.std(IoU_Source2Target)))
 plt.savefig('Plots/'+'Model_Source_Predictions_Target.png')
 df.to_csv('/data/jpastor/Nuevas_ejecuciones/Resultados_hm.csv',mode='a',header=True)
-relevant_files =['/data/jpastor/Nuevas_ejecuciones/Resultados_hm.csv',testName+'.txt','hyperparameters.py']
-relevant_files=relevant_files+[x for x in os.listdir( ) if x.endswith(".png") ]+['Plots/Model_Source_Predictions_Target.png']+[x for x in os.listdir( ) if x.endswith(".txt") and x.startswith('per_epoch')]
-send_mail('Server-Arganda03', ['juliopastor98@gmail.com'], Source+'TO'+Target, 'Resultado de las ejecuciones de '+Source+' y '+Target, files=relevant_files,
-              server='smtp.gmail.com', port=587, username='j.pastor.code@gmail.com', password='JulioPastor2021@',
-              use_tls=True)
