@@ -40,7 +40,7 @@ python3 -m pip install -r requirements.txt
 
 - Prepare the data.
 
-    - Each data or domain directory must be organized as follows:
+    - Each data or domain directory must be organized as follows but it accepts both .tif and .png/jpg files:
 
         ```
         data/
@@ -74,11 +74,14 @@ python3 -m pip install -r requirements.txt
         1) Adjust hyperparameter values as well as your file paths in the `Hyperparameters.py` section and run all.
         
             1) It is worth noting that the paths in the hyperparameters file include two options, the regular image path and a secondary path to include the histogram matched files path.
-            2) If you don't care about histogram_matching you can just specify False in the hm option and ignore this parameter.
+           2) Please keep in mind that all paths work as a relative path except the images path that you'll need to edit them
         2) Run the SSL_Seg.py from your python environment.
 
        
 
     * **Notebook use**: Using the `SSL_notebook.pynb`.
+        1) Edit the hyperparameters of the first cell both for the pretraining and the training. Remember that selecting no pretraining will load weights from a previous experiment and if you don't have them you'll need to first pretrain it. 
+        2) Check all the paths from the second cell match your dataset ones
+        3) Execute third cell, all code will run together saving images in the plots folder and writing in the output relevant events and results. It would also be created a txt file with the result and a .csv.
 
        
