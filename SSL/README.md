@@ -77,6 +77,8 @@ python3 -m pip install -r requirements.txt
            2) Please keep in mind that all paths work as a relative path except the images path that you'll need to edit them
         2) Run the SSL_Seg.py from your python environment.
  ```Bash
+git clone https://github.com/danifranco/EM_domain_adaptation.git EM_domain_adaptation
+cd EM_domain_adaptation/SSL
 source tutorial-env/bin/activate
 python3 -m pip install -r requirements.txt
 python3 SSL_Seg.py
@@ -84,7 +86,7 @@ python3 SSL_Seg.py
 
        
 
-    * **Notebook use**: Using the `SSL_notebook.pynb`.
+   * **Notebook use**: Using the `SSL_notebook.pynb`.
         1) Edit the hyperparameters of the first cell both for the pretraining and the training. Remember that selecting no pretraining will load weights from a previous experiment and if you don't have them you'll need to first pretrain it. 
         2) Check all the paths from the second cell match your dataset ones
         3) Execute third cell, all code will run together saving images in the plots folder and writing in the output relevant events and results. It would also be created a txt file with the result and a .csv.
