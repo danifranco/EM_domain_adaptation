@@ -76,6 +76,11 @@ python3 -m pip install -r requirements.txt
             1) It is worth noting that the paths in the hyperparameters file include two options, the regular image path and a secondary path to include the histogram matched files path.
            2) Please keep in mind that all paths work as a relative path except the images path that you'll need to edit them
         2) Run the SSL_Seg.py from your python environment.
+ ```Bash
+source tutorial-env/bin/activate
+python3 -m pip install -r requirements.txt
+python3 SSL_Seg.py
+```
 
        
 
