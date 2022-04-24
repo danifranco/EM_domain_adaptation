@@ -1,7 +1,6 @@
 
 
 """# Code Execution
-
 ### Imports and folder creation
 """
 import sys
@@ -11,18 +10,9 @@ from PIL import Image
 from scipy.sparse.construct import rand
 sys.path.append('../') #in order to access functions.py 
 from functions import *
-from hyperparameters import  *
-
-import sys
-#@title
-# Make sure TF 2 is used
-
 
 from tensorflow_examples.models.pix2pix import pix2pix
 from scipy.sparse.construct import rand
-sys.path.append('SelfSupervisedLearning/') #in order to access functions.py 
-from functions import *
-#from hyperparameters import  * #show_images,plot_history,factor,noise,testName,numEpochsPretrain ,patiencePretrain ,lrPretrain ,batch_size_valuePretrain ,no_schedule,schedulePretrain,model_namePretrain,optimizer_namePretrain ,loss_acronymPretrain ,max_poolingPretrain,numEpochs ,patience,lr,batch_size_value ,schedule ,model_name ,optimizer_name ,loss_acronym ,max_pooling,repetitions,train_encoder,bottleneck_freezing,GPU
 import os
 import tensorflow as tf
 import numpy as np
@@ -46,6 +36,7 @@ try:
   os.mkdir(testName)
 except:
  print('Already created folder')
+ os.chdir(testName)
 try:
   os.mkdir('saved_Source_models')
 except:
@@ -76,11 +67,8 @@ try:
   os.mkdir(modelos_path)
 except:
  print('Already created folder')
-
 """### Pretraining step
-
 #### Pretraining step style Dataset 1
-
 Load dataset 1 and its corresponding patches
 """
 
@@ -165,7 +153,6 @@ train_img2, val_img2, train_lbl2, val_lbl2 = train_test_split(train_img2,
 
 """
 ## Preparing the pre-training data
-
 """
 
 
@@ -287,15 +274,10 @@ if pretrain_model1:
     #del noisy_val_img,val_img_patches
 
     """###Pretraining - Super resolution
-
     The idea is to **pretrain the network by using the noisy patches** previously created as the input and the **pretraining ground_truth would be the original images**. 
-
     This procedure is meant to **enhance the initial weights of our model to afterwards improve its segmentation performance and its transferability to the target domain**.
-
     As loss function, we use the mean squared error (MSE) between the expected and the predicted pixel values, and we also include the mean absolute error (MAE) as a control metric.
-
     For this step **we will use all the training data**, as even simulating scarcity of labelled data, the unlabelled data might still be available for being used in SSL super resolution.
-
     Furthermore we will evaluate the PSNR SSNR
     """
 
@@ -490,7 +472,7 @@ for i in range(0,repetitions):
     tf.keras.backend.clear_session()
     history,model2=train(X_train,Y_train,X_val,Y_val,numEpochs,1,patience,lr,lr*1e-1,batch_size_value,schedule,model_name,optimizer_name,loss_acronym,max_pooling,train_encoder=train_encoder,preTrain=False,Denoising=False,pre_load_weights=True,pretrained_model=model,plot_history=plot_history,bottleneck_freezing=bottleneck_freezing,check_ev=True,path_save='saved_Source_models',X_test=X_test,Y_test=Y_test,train_decoder=train_decoder,Source=Source,Target=Target)
     # Evaluate the model on the test data using `evaluate`
-    model2.save_weights((testName+'/'+Source+'TO'+Target+'_FineTunedModel'+str(i)+'.h5'))
+    model2.save_weights(Source+'TO'+Target+'_FineTunedModel'+str(i)+'.h5')
     print('\n# Evaluate on test data with all training data in loop:',i)
 
 #del X_train,Y_train,X_val,Y_val,X_test,test_lbl
@@ -500,9 +482,9 @@ X_test,_,test_lbl=prepare_test_data(test_img2,test_lbl2)
 #del test_img2,test_lbl2
 
 IoU_Source2Source=[]
-model_input_filenames2 = [x for x in os.listdir(testName+'' ) if x.endswith(".h5") and x.startswith(Source)]
+model_input_filenames2 = [x for x in os.listdir() if x.endswith(".h5") and x.startswith(Source)]
 for w in  model_input_filenames2 :
-  model2.load_weights(testName+'/'+w)
+  model2.load_weights(w)
   IoU_Source2Source.append(evaluate_test(X_test,test_lbl,model2))
   
 
@@ -559,7 +541,7 @@ X_test,Y_test,test_lbl=prepare_test_data(test_img1,test_lbl1)
 
 IoU_Source2Target=[]
 for w in  model_input_filenames2 :
-  model2.load_weights(testName+'/'+w)
+  model2.load_weights(w)
 
   IoU_Source2Target.append(evaluate_test(X_test,test_lbl,model2,save_img=True,path='Test_predictions'))
 
