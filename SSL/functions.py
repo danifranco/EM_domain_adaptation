@@ -855,7 +855,8 @@ class CustomSaver(keras.callbacks.Callback):
         
      
     def on_epoch_end(self, epoch, logs={}):
-        if (epoch%2)==0:  # or save after some epoch, each k-th epoch etc.
+        
+        if (epoch%2)==0 or epoch==0 or epoch==1:  # or save after some epoch, each k-th epoch etc.
             IoU_Dataset12Dataset1_temp=[]
             for i in range(0,len(self.Xtest)):
                 
@@ -904,7 +905,9 @@ class CustomSaver(keras.callbacks.Callback):
             #             self.model.stop_training = True
             # self.past_ratio=gt_ratio
             self.epoch=epoch
-            if epoch>=10:
+            
+                
+            if epoch>=10 or epoch<=1:
                 if  abs(gt_ratio-self.desired_ratio)<=abs(self.past_ratio-self.desired_ratio):
                     #Update if the difference between the actual and past ratio is  bigger than tol*actual_ratio 
                     
@@ -1250,8 +1253,8 @@ def filter_patches(patch,gt_patch,percent):
         if np.mean(np.mean(gt_patch[i]))>=percent:
             preserved_patches.append(patch[i])
             preserved_GT.append(gt_patch[i])
-    print('Se han eliminado:'+str(len(patch)-len(preserved_patches))+' patches no informativos.')
-    print('Se han conservado:'+str(len(preserved_patches)))
+    print('Deleted:'+str(len(patch)-len(preserved_patches))+' non-informative patches')
+    print('Conserved:'+str(len(preserved_patches)))
     return preserved_patches, preserved_GT
 
  
