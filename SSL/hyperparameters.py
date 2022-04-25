@@ -1,14 +1,15 @@
 
 """## Hyperparameters specification"""
 
+
 #GPU selection 
 information_patches=0.05
 filter_Target=True#@param {type:"boolean"}
 filter_Source=True#@param {type:"boolean"}
-pretrain_model1=False#@param {type:"boolean"}
-GPU_availability=True#@param {type:"boolean"}
+pretrain_model1=True#@param {type:"boolean"}
+GPU_availability=False#@param {type:"boolean"}
 show_images=False#@param {type:"boolean"}
-GPU="0"#Perform and nvidia-smi to check which free gpus are available 
+GPU="1"#Perform and nvidia-smi to check which free gpus are available 
 #Parameters to be modified:
 plot_history=False#@param {type:"boolean"}
 factor=4 #@param {type:"integer"}
@@ -17,9 +18,9 @@ factor_patches=1 #@param {type:"integer"}
 random_patches=True#@param {type:"boolean"}
 # === PreTraining parameters ===
 # number of epochs
-numEpochsPretrain =  200#@param {type:"integer"}
+numEpochsPretrain =  1#@param {type:"integer"}
 # patience
-patiencePretrain =  200#@param {type:"integer"}
+patiencePretrain =  1#@param {type:"integer"}
 # learning rate
 lrPretrain = 5e-4 #@param {type:"number"}
 # batch size
@@ -40,9 +41,9 @@ max_poolingPretrain=True #@param {type:"boolean"}
 
 # === Training parameters ===
 # number of epochs
-numEpochs =  60#@param {type:"integer"}
+numEpochs =  1#@param {type:"integer"}
 # patience
-patience = 60#@param {type:"integer"}
+patience = 1#@param {type:"integer"}
 # learning rate
 lr =1e-4#@param {type:"number"}
 # batch size
@@ -58,42 +59,41 @@ loss_acronym = 'BCE' #@param ['BCE','Dice','SEG']{type:"string"}
 # create the network and compile it with its optimizer
 max_pooling=True #@param {type:"boolean"}
 
-repetitions=10#@param {type:"slider", min:1, max:30, step:1}
+repetitions=1#@param {type:"slider", min:1, max:30, step:1}
 train_encoder=False #@param {type:"boolean"}
 bottleneck_freezing=False #@param {type:"boolean"}
 train_decoder=True
+
 #Select dataset-route {'Lucchi++','Kasthuri++','Achucarro','VNC'}
 #
+#Name of the Target and Source folder
 Target='Lucchi++'#@param ['Lucchi++','Kasthuri++','Achucarro','VNC']
 Source='Kasthuri++'#@param ['Lucchi++','Kasthuri++','Achucarro','VNC']
 noisy_input = False #@param {type:"boolean"}
-histogram_matching=False
-if histogram_matching:
-    hm='hm'
-else:
-    hm=''
-testName=Target+'_'+Source+'_'+model_name+'_'+hm 
+histogram_matching=True
 
+testName=Target+'_'+Source+'_'+model_name 
 
-train_input_path1 = '/home/jpastor/Downloads/Datasets/'+Target+'/train/x'
-train_label_path1 = '/home/jpastor/Downloads/Datasets/'+Target+'/train/y'
-test_input_path1 = '/home/jpastor/Downloads/Datasets/'+Target+'/test/x'
-test_label_path1 = '/home/jpastor/Downloads/Datasets/'+Target+'/test/y'
+#Specify full path for the images
+train_input_path1 = 'Data/'+Target+'/train/x'
+train_label_path1 = 'Data/'+Target+'/train/y'
+test_input_path1 = 'Data/'+Target+'/test/x'
+test_label_path1 = 'Data/'+Target+'/test/y'
 
-train_input_path2 = '/home/jpastor/Downloads/Datasets/'+Source+'/train/x'
-train_label_path2 = '/home/jpastor/Downloads/Datasets/'+Source+'/train/y'
-test_input_path2 = '/home/jpastor/Downloads/Datasets/'+Source+'/test/x'
-test_label_path2 = '/home/jpastor/Downloads/Datasets/'+Source+'/test/y'
+train_input_path2 = 'Data/'+Source+'/train/x'
+train_label_path2 = 'Data/'+Source+'/train/y'
+test_input_path2 = 'Data/'+Source+'/test/x'
+test_label_path2 = 'Data/'+Source+'/test/y'
 
-train_input_path1_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Target+'/'+Target+'_s-t_'+Source+'/train/x'
-train_label_path1_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Target+'/'+Target+'_s-t_'+Source+'/train/y'
-test_input_path1_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Target+'/'+Target+'_s-t_'+Source+'/test/x'
-test_label_path1_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Target+'/'+Target+'_s-t_'+Source+'/test/y'
+train_input_path1_hm = 'Data_hm/'+Target+'/'+Target+'_s-t_'+Source+'/train/x'
+train_label_path1_hm = 'Data_hm/'+Target+'/'+Target+'_s-t_'+Source+'/train/y'
+test_input_path1_hm = 'Data_hm/'+Target+'/'+Target+'_s-t_'+Source+'/test/x'
+test_label_path1_hm ='Data_hm/'+Target+'/'+Target+'_s-t_'+Source+'/test/y'
 
-train_input_path2_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Source+'/'+Source+'_s-t_'+Target+'/train/x'
-train_label_path2_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Source+'/'+Source+'_s-t_'+Target+'/train/y'
-test_input_path2_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Source+'/'+Source+'_s-t_'+Target+'/test/x'
-test_label_path2_hm = '/home/jpastor/Downloads/datasets-hist-matching/hist_match/'+Source+'/'+Source+'_s-t_'+Target+'/test/y'
+train_input_path2_hm = 'Data_hm/'+Source+'/'+Source+'_s-t_'+Target+'/train/x'
+train_label_path2_hm ='Data_hm/'+Source+'/'+Source+'_s-t_'+Target+'/train/y'
+test_input_path2_hm = 'Data_hm/'+Source+'/'+Source+'_s-t_'+Target+'/test/x'
+test_label_path2_hm = 'Data_hm/'+Source+'/'+Source+'_s-t_'+Target+'/test/y'
 
 import pandas as pd
 import numpy as np
