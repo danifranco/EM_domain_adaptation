@@ -43,7 +43,7 @@ python3 -m pip install -r requirements.txt
     - Each data or domain directory must be organized as follows but it accepts both .tif and .png/jpg files:
 
         ```
-        data/
+   data/|--Lucchi++
             |-- train/
             |    |-- x/
             |    |      training-0001.tif
