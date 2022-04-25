@@ -6,9 +6,9 @@
 import sys
 import numpy as np
 from PIL import Image
-
+import os
 from scipy.sparse.construct import rand
-sys.path.append('../') #in order to access functions.py 
+
 from functions import *
 
 from tensorflow_examples.models.pix2pix import pix2pix
@@ -36,7 +36,7 @@ try:
   os.mkdir(testName)
 except:
  print('Already created folder')
- os.chdir(testName)
+os.chdir(testName)
 try:
   os.mkdir('saved_Source_models')
 except:
@@ -599,4 +599,4 @@ plt.imshow(test_lbl[len(predictions)-1].astype(int)[:,:], 'gray')
 plt.title('GT labels')
 plt.suptitle(Source+' trained model to '+Target +'\n with IoU:'+str(np.mean(IoU_Source2Target))+'$\pm$'+str(np.std(IoU_Source2Target)))
 plt.savefig('Plots/'+'Model_Source_Predictions_Target.png')
-df.to_csv('/data/jpastor/Nuevas_ejecuciones/Resultados_hm.csv',mode='a',header=True)
+df.to_csv(testName+'Resultados_hm.csv',mode='a',header=True)
