@@ -12,6 +12,7 @@ datasets = ['Lucchi++', 'VNC', 'Kasthuri++']
 
 out_models_path = './models/'
 sys.stderr = Logger(stream=sys.stderr, filename='errors.log')
+cc_path = './Models_cc/'
 
 def main(resul_filename = './Results_YNet.json'):
     
@@ -49,11 +50,11 @@ def main(resul_filename = './Results_YNet.json'):
     HistMatch = [False, True, True]
     # Fine tunning
     FT = [False, True, True]
-    # Use ARA
+    # Use Solidity
     custom_callback = [False, False, True] # if True: ignore patience and use custom criteria
     # number of random patches (with number lower than 0, sequential patches will be used)
     n_patches = 1000
-    # ARA analisis mode (store plots and csv with info)
+    # morphology analisis mode (store plots and csv with info)
     analysis_mode = False
 
     # Number of times all models will be computed (to obtain mean and std)
@@ -110,6 +111,7 @@ def main(resul_filename = './Results_YNet.json'):
                         True,
                         n_patches,
                         custom_callback[j],
+                        cc_path,
                         analysis_mode
                         )
 
@@ -222,4 +224,4 @@ if __name__ == '__main__':
     
     create_dir(out_models_path)
     main()
-    print("\n----------------- FIN -----------------\n")
+    print("\n----------------- END -----------------\n")

@@ -225,11 +225,11 @@ def morphology_analysis(data, input, delta):
     n_objects=[]
     ratio_objects_area=[]
     pixels_to_th= 10 
-    factor = 1 # para kasthuri
+    factor = 1
 
     label_img = label(data)   # Connected components 
-                                                                                                     
-    for i in range(label_img.shape[0]):     # Por cada imagen 2D                                                                               
+
+    for i in range(label_img.shape[0]):     # for each 2D image
         
         img = label_img[i]
         area=(label_img.shape[1] * label_img.shape[2])
@@ -238,19 +238,18 @@ def morphology_analysis(data, input, delta):
                                                                                                    
         props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades                                        
                                                                                                             
-        for v in props['area']: 
+        for i,v in enumerate(props['area']): 
             p_area.append(v)
-            #divido el tamaño de cada objeto por el área útil de cada slice(esto es sobre todo por kasthuri)
-            ratio = v/area
-            ratio = ratio*factor
             if v>pixels_to_th:
-                ratio_objects_area.append(ratio)      
-        factor = factor + delta
+                ratio = v/area
+                ratio = ratio*factor
+                ratio_objects_area.append(ratio)
 
-        for v in props['solidity']: p_solidity.append(v)                                                                   
-        for v in props['eccentricity']: p_eccentricity.append(v)                                                           
-        for v in props['orientation']: p_orientation.append(v)  
-        n_objects.append(len(np.unique(img))-1) 
+                p_solidity.append(props['solidity'][i])
+                p_eccentricity.append(props['eccentricity'][i])
+                p_orientation.append(props['orientation'][i])
+        n_objects.append(len(np.unique(img))-1)     
+        factor = factor + delta
                                                            
     try:                                                                                                                   
         gt_area_value = statistics.mean(p_area)                                                                                
@@ -319,9 +318,6 @@ class CustomSaver():
         test_img, test_lbl = get_xy_image_list(self.dataset_path + self.domain +'/'+ self.set)
         src_test_img, src_test_lbl = get_xy_image_list(self.dataset_path + source +'/'+ 'train_val')
 
-        """ Se le pasa el X_test y el Y_test al usarlo para aprovechar y evaluar directamente en cada época 
-        y no tener que recargar luego los pesos
-        """
         self.batch_size=1
         self.Xtest, self.Ytest = prepare_data(copy(test_img), test_lbl, use_padding=True, expand_dims=True)
         self.src_Xtest, self.src_Ytest = prepare_data(copy(src_test_img), src_test_lbl, use_padding=False, expand_dims=False)
@@ -371,7 +367,7 @@ class CustomSaver():
         self.trg_x_noPadding = np.asarray(self.trg_x_noPadding)
         self.trg_delta = get_delta(self.trg_y_noPadding, self.trg_x_noPadding) if self.target == 'Kasthuri++' else 0.0
 
-        *_, self.source_desired_ratio = morphology_analysis(np.array(self.src_Ytest), np.array(self.src_Xtest), self.src_delta)
+        _, self.source_desired_solidity, *_, self.source_desired_ratio = morphology_analysis(np.array(self.src_Ytest), np.array(self.src_Xtest), self.src_delta)
 
     def get_results(self):
         '''
@@ -383,7 +379,11 @@ class CustomSaver():
         morphology = {}
         morphology['source <{}> delta'.format(self.source)] = self.src_delta
         morphology['target <{}> delta'.format(self.target)] = self.trg_delta
-        morphology['src_desired_ratio'] = float(self.source_desired_ratio)
+        morphology['src_desired_solidity'] = float(self.source_desired_solidity)
+        morphology['best_model'] = str(self.best_model)
+        morphology['best_model_iou'] = float(self.best_model_iou)
+        morphology['best_model_epoch'] = int(self.best_model_epoch)
+
         morphology['Epochs'] = np.array(self.x).tolist()
         morphology['IoU'] = np.array(self.IoU_test).tolist()
         
@@ -394,9 +394,7 @@ class CustomSaver():
         morphology['Median area'] = np.array(self.median_area).tolist()
         morphology['Object Number'] = np.array(self.n_objects).tolist()
         morphology['Ratio'] = np.array(self.ratio).tolist()
-        morphology['best_model'] = str(self.best_model)
-        morphology['best_model_iou'] = float(self.best_model_iou)
-        morphology['best_model_epoch'] = int(self.best_model_epoch)
+
         rm_dir(self.dst_path)
         return morphology
 
@@ -445,8 +443,9 @@ class CustomSaver():
         self.n_objects.append(gt_object_number)
         self.ratio.append(gt_ratio)
         #Si el ratio es cercano a source_desired_ratio y el número de épocas es superior a N
-        if abs(gt_ratio-self.source_desired_ratio)<self.dif and epoch>4:
-            self.dif=abs(gt_ratio-self.source_desired_ratio)
+        act_dif = abs(gt_solidity_value-self.source_desired_solidity)
+        if act_dif < self.dif:
+            self.dif = act_dif
             self.best_model= snap
             self.best_model_iou = jaccard
             self.best_model_epoch = epoch

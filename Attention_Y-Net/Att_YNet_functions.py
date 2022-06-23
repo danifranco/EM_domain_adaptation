@@ -890,19 +890,19 @@ def morphology_analysis(data, input, delta):
                                                                                                    
         props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades                                        
                                                                                                             
-        for v in props['area']: 
+        for i,v in enumerate(props['area']): 
             p_area.append(v)
-            #divido el tamaño de cada objeto por el área útil de cada slice(esto es sobre todo por kasthuri)
-            ratio = v/area
-            ratio = ratio*factor
             if v>pixels_to_th:
-                ratio_objects_area.append(ratio)      
-        factor = factor + delta
+                #divido el tamaño de cada objeto por el área útil de cada slice(esto es sobre todo por kasthuri)
+                ratio = v/area
+                ratio = ratio*factor
+                ratio_objects_area.append(ratio)
 
-        for v in props['solidity']: p_solidity.append(v)                                                                   
-        for v in props['eccentricity']: p_eccentricity.append(v)                                                           
-        for v in props['orientation']: p_orientation.append(v)  
-        n_objects.append(len(np.unique(img))-1) 
+                p_solidity.append(props['solidity'][i])
+                p_eccentricity.append(props['eccentricity'][i])
+                p_orientation.append(props['orientation'][i])
+        n_objects.append(len(np.unique(img))-1)     
+        factor = factor + delta
                                                            
     try:                                                                                                                   
         gt_area_value = statistics.mean(p_area)                                                                                
@@ -987,15 +987,7 @@ class CustomSaver(keras.callbacks.Callback):
         self.n_objects=[]
         self.ratio=[]
         self.dif=1000
-
-        self.src_IoU_test=[]
-        self.src_area=[]
-        self.src_solidity=[]
-        self.src_eccentricity=[]
-        self.src_orientation=[]
-        self.src_median_area=[]
-        self.src_n_objects=[]
-        self.src_ratio=[]
+        self.solidity_diff = []
 
         self.analysis_mode = analysis_mode
 
@@ -1026,7 +1018,7 @@ class CustomSaver(keras.callbacks.Callback):
         self.trg_delta = get_delta(self.trg_y_noPadding, self.trg_x_noPadding) if self.target == 'Kasthuri++' else 0.0
 
         #self.source_desired_ratio = source_desired_ratio
-        *_, self.source_desired_ratio = morphology_analysis(np.array(self.src_Ytest), np.array(self.src_Xtest), self.src_delta)
+        _, self.source_desired_solidity, *_, self.source_desired_ratio = morphology_analysis(np.array(self.src_Ytest), np.array(self.src_Xtest), self.src_delta)
 
 
     def get_results(self):
@@ -1040,7 +1032,7 @@ class CustomSaver(keras.callbacks.Callback):
         morphology = {}
         morphology['source <{}> delta'.format(self.source)] = self.src_delta
         morphology['target <{}> delta'.format(self.target)] = self.trg_delta
-        morphology['src_desired_ratio'] = float(self.source_desired_ratio)
+        morphology['src_desired_solidity'] = float(self.source_desired_solidity)
         morphology['Epochs'] = np.array(self.x).tolist()
         morphology['IoU'] = np.array(self.IoU_test).tolist()
         
@@ -1051,6 +1043,7 @@ class CustomSaver(keras.callbacks.Callback):
         morphology['Median area'] = np.array(self.median_area).tolist()
         morphology['Object Number'] = np.array(self.n_objects).tolist()
         morphology['Ratio'] = np.array(self.ratio).tolist()
+        morphology['solidity-diff'] = np.array(self.solidity_diff).tolist()
 
         return morphology
         
@@ -1065,12 +1058,13 @@ class CustomSaver(keras.callbacks.Callback):
           logs: (ignored)
         '''
 
-        if (epoch%2)==0:  # se guarda cada múltiplo de 2 epochs
+        if (epoch%2)==0:
             #target
             reconst_test, preds_test = self.model.predict(self.Xtest, batch_size=self.batch_size)
             pred_trg_masks = preds_test[:,:,:,0]>=0.5
             pred_trg_masks = [remove_padding(pred_trg_masks[i], x.shape) for i, x in enumerate(self.original_test_img)] # remove padding
             pred_trg_masks = np.asarray(pred_trg_masks)
+
             iou = []
             for i in range(0, len(pred_trg_masks)):
                 iou.append( jaccard_index(self.trg_y_noPadding[i], pred_trg_masks[i]) )
@@ -1092,16 +1086,17 @@ class CustomSaver(keras.callbacks.Callback):
             self.median_area.append(gt_area_value_median)
             self.n_objects.append(gt_object_number)
             self.ratio.append(gt_ratio)
-            #Si el ratio es cercano a source_desired_ratio y el número de épocas es superior a N
-            if abs(gt_ratio-self.source_desired_ratio)<self.dif and epoch>4:
-                self.dif=abs(gt_ratio-self.source_desired_ratio)
+            self.solidity_diff.append(abs(gt_solidity_value-self.source_desired_solidity))
+            
+            act_dif = abs(gt_solidity_value-self.source_desired_solidity)
+            if act_dif < self.dif:
+                self.dif = act_dif
                 self.best_model=f'{self.path_save}model_E{epoch}_jaccard_{jaccard:.3f}.h5'
                 self.model.save(f'{self.path_save}model_E{epoch}_jaccard_{jaccard:.3f}.h5')
-                print(f'{self.path_save}/model_E{epoch}_jaccard_{jaccard:.3f}')
 
     def on_train_end(self,logs={}):
         '''
-        Restore the selected model using ARA. 
+        Restore the selected model using Solidity. 
         
         Store plots and csv if analysis_mode == True.
         '''
@@ -1128,7 +1123,18 @@ class CustomSaver(keras.callbacks.Callback):
             plt.title(self.best_model[:-3])
             plt.axhline(y=2e-3, color='r', linestyle='dashed')
             plt.savefig('Ratio_per_epoch_evolution_{}_s-t_{}_{}.png'.format(self.source, self.target, datetime.datetime.now().time()))
-            morphology=pd.DataFrame(self.get_results())
+            morphology=pd.DataFrame()
+            morphology['Epochs']=self.x
+            morphology['IoU']=self.IoU_test
+            
+            morphology['area']=self.area
+            morphology['solidity']=self.solidity
+            morphology['eccentricity']=self.eccentricity
+            morphology['orientation']=self.orientation
+            morphology['Median area']=self.median_area
+            morphology['Object Number']=self.n_objects
+            morphology['Ratio']=self.ratio
+            morphology['solidity-diff'] = self.solidity_diff
             morphology.to_csv('per_epoch_evolution_{}_s-t_{}_{}.txt'.format(self.source, self.target, datetime.datetime.now().time()))
 
 def filter_patches(img_list, lbl_list, zeros_perc = 0.5):
@@ -1156,6 +1162,33 @@ def filter_patches(img_list, lbl_list, zeros_perc = 0.5):
             resul_img_list.append(img)
             resul_lbl_list.append(lbl)
     return resul_img_list, resul_lbl_list
+
+def prepare_seq_patches(image_list, label_list, h_cuts, v_cuts):
+    image_list = [add_padding(x) for x in image_list]
+    label_list = [add_padding(x) for x in label_list]
+
+    image_list = create_patches( image_list, h_cuts, v_cuts )
+    label_list = create_patches( label_list, h_cuts, v_cuts )
+
+    image_list, label_list = filter_patches(image_list, label_list)
+
+    return image_list, label_list
+
+def prepare_rand_patches(image_list, label_list, n_patches):
+    p_img = []
+    p_lbl = []
+
+    while len(p_img)<n_patches:
+        images, patches = create_random_patches( image_list, label_list, 1, [256, 256] )
+        images, patches = filter_patches(images, patches)
+        p_img = p_img + images
+        p_lbl = p_lbl + patches
+
+    rand_images = p_img[:n_patches]
+    rand_labels = p_lbl[:n_patches]
+
+    return rand_images, rand_labels
+
 ##############################################################################################################################
 from time import time
 def train_main( source,target,       
@@ -1188,6 +1221,7 @@ def train_main( source,target,
                 spatial_dropout,
                 n_patches,
                 use_custom_callback,
+                cc_path,
                 analysis_mode
                 ):
 
@@ -1204,67 +1238,16 @@ def train_main( source,target,
     target_trainTest_img = np.concatenate( (np.array(target_img).ravel(), np.array(target_test_img).ravel()) ) # for histogram matching
 
     if n_patches < 0:
-        source_img = [add_padding(x) for x in source_img]
-        source_lbl = [add_padding(x) for x in source_lbl]
-        target_img = [add_padding(x) for x in target_img]
-        target_lbl = [add_padding(x) for x in target_lbl]
-        source_test_img = [add_padding(x) for x in source_test_img]
-        source_test_lbl = [add_padding(x) for x in source_test_lbl]
-        target_test_img = [add_padding(x) for x in target_test_img]
-        target_test_lbl = [add_padding(x) for x in target_test_lbl]
-
-        # sequential patches
-        source_img = create_patches( source_img, h_cuts[source], v_cuts[source] )
-        source_lbl = create_patches( source_lbl, h_cuts[source], v_cuts[source] )
-        target_img = create_patches( target_img, h_cuts[target], v_cuts[target] ) # Kasthuri 7,6 # Lucchi 4,3 # vnc 4,4
-        target_lbl = create_patches( target_lbl, h_cuts[target], v_cuts[target] )
-        source_test_img = create_patches( source_test_img, h_cuts[source], v_cuts[source] )
-        source_test_lbl = create_patches( source_test_lbl, h_cuts[source], v_cuts[source] )
-        target_test_img = create_patches( target_test_img, h_cuts[target], v_cuts[target] )
-        target_test_lbl = create_patches( target_test_lbl, h_cuts[target], v_cuts[target] )
-        
-        source_img, source_lbl = filter_patches(source_img, source_lbl)
-        target_img, target_lbl = filter_patches(target_img, target_lbl) 
-        source_test_img, source_test_lbl = filter_patches(source_test_img, source_test_lbl)
-        target_test_img, target_test_lbl = filter_patches(target_test_img, target_test_lbl)
+        source_img, source_lbl = prepare_seq_patches(source_img, source_lbl, h_cuts[source], v_cuts[source])
+        target_img, target_lbl = prepare_seq_patches(target_img, target_lbl, h_cuts[target], v_cuts[target])
+        source_test_img, source_test_lbl = prepare_seq_patches(source_test_img, source_test_lbl, h_cuts[source], v_cuts[source])
+        target_test_img, target_test_lbl = prepare_seq_patches(target_test_img, target_test_lbl, h_cuts[target], v_cuts[target])
     else:
         # random patches
-        p_source_img = []
-        p_source_lbl = []
-        p_target_img = []
-        p_target_lbl = []
-        p_source_test_img = []
-        p_source_test_lbl = []
-        p_target_test_img = []
-        p_target_test_lbl = []
-        while len(p_source_img)<n_patches:
-            a,b = create_random_patches( source_img, source_lbl, 1, [256, 256] )
-            a, b = filter_patches(a, b)
-            p_source_img = p_source_img + a
-            p_source_lbl = p_source_lbl + b
-        while len(p_target_img)<n_patches:
-            a,b = create_random_patches( target_img, target_lbl, 1, [256, 256] )
-            a, b = filter_patches(a, b)
-            p_target_img = p_target_img + a
-            p_target_lbl = p_target_lbl + b
-        while len(p_source_test_img)<n_patches:
-            a,b = create_random_patches( source_test_img, source_test_lbl, 1, [256, 256] )
-            a, b = filter_patches(a, b)
-            p_source_test_img = p_source_test_img + a
-            p_source_test_lbl = p_source_test_lbl + b
-        while len(p_target_test_img)<n_patches:
-            a,b = create_random_patches( target_test_img, target_test_lbl, 1, [256, 256] )
-            a, b = filter_patches(a, b)
-            p_target_test_img = p_target_test_img + a
-            p_target_test_lbl = p_target_test_lbl + b
-        source_img = p_source_img[:n_patches]
-        source_lbl = p_source_lbl[:n_patches]
-        target_img = p_target_img[:n_patches]
-        target_lbl = p_target_lbl[:n_patches]
-        source_test_img = p_source_test_img[:n_patches]
-        source_test_lbl = p_source_test_lbl[:n_patches]
-        target_test_img = p_target_test_img[:n_patches]
-        target_test_lbl = p_target_test_lbl[:n_patches]
+        source_img, source_lbl = prepare_rand_patches(source_img, source_lbl, n_patches)
+        target_img, target_lbl = prepare_rand_patches(target_img, target_lbl, n_patches)
+        source_test_img, source_test_lbl = prepare_rand_patches(source_test_img, source_test_lbl, n_patches)
+        target_test_img, target_test_lbl = prepare_rand_patches(target_test_img, target_test_lbl, n_patches)
 
     # Unsupervised task (Reconstruction) data: 
     # test images has no masks, so i put with target, inside the dataset without masks. 
@@ -1420,11 +1403,11 @@ def train_main( source,target,
     model.compile(optimizer=optim, loss=loss_funct, metrics=eval_metric, loss_weights = {"img": alpha, "mask": beta})
 
     if use_custom_callback:
-        aux_path = './Models_cc/'
-        if os.path.exists(aux_path):
-            shutil.rmtree(aux_path) #remove previous content
-        create_dir(aux_path)
-        callb = CustomSaver(source_path, target_test_data_path, source, target, analysis_mode, path_save=aux_path)
+        
+        if os.path.exists(cc_path):
+            shutil.rmtree(cc_path) #remove previous content
+        create_dir(cc_path)
+        callb = CustomSaver(source_path, target_test_data_path, source, target, analysis_mode, path_save=cc_path)
     else:
         # callback for early stop
         callb = EarlyStopping(patience=patience, verbose=1, restore_best_weights=True)

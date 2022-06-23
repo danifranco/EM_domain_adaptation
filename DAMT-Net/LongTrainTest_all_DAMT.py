@@ -28,7 +28,7 @@ dataset2int = {"Lucchi++":0, "VNC":1, "Kasthuri++":2}# CHANGE THIS
 save_dir = "./results/"
 
 # Json names
-json_name_ARA = save_dir + 'Results_DAMT-Net_x10(ARA).json'
+json_name_Solidity = save_dir + 'Results_DAMT-Net_x10(Solidity).json'
 json_name_val = save_dir + 'Results_DAMT-Net_x10(val).json'
 json_name_last = save_dir + 'Results_DAMT-Net_x10(last).json'
 
@@ -74,10 +74,10 @@ def get_empty_all_results():
     return all_results
 
 create_dir(save_dir)
-all_results_ARA = get_empty_all_results()
+all_results_Solidity = get_empty_all_results()
 all_results_last = get_empty_all_results()
 all_results_val = get_empty_all_results()
-iou_mat_r_ARA = [np.zeros((len(datasets),)*2).tolist() for r in range(repetitions)]
+iou_mat_r_Solidity = [np.zeros((len(datasets),)*2).tolist() for r in range(repetitions)]
 iou_mat_r_last = [np.zeros((len(datasets),)*2).tolist() for r in range(repetitions)]
 iou_mat_r_val = [np.zeros((len(datasets),)*2).tolist() for r in range(repetitions)]
 for r in range(repetitions):
@@ -130,11 +130,12 @@ for r in range(repetitions):
                 continue
             train_end = time()
             all_results_val[source][target]["train"]['time'].append(train_end-train_start)
-            all_results_ARA[source][target]["train"]['time'].append(train_end-train_start)
+            all_results_Solidity[source][target]["train"]['time'].append(train_end-train_start)
             all_results_last[source][target]["train"]['time'].append(train_end-train_start)
 
             print("\nTEST\n")
-
+            
+            # filename examples for best and normal snaps:
             # CVbest6500_0.9241285685264168.pth
             # CV_0.pth
             best_snap_files = glob(dst_path + "snapshots/CVbest*.pth")
@@ -220,30 +221,47 @@ for r in range(repetitions):
                         all_results_last[source][target]["test"]["target"][set]['iou'].append(float(mean_iou))
             iou_mat_r_last[r][dataset2int[source]][dataset2int[target]] = all_results_last[source][target]["test"]["target"]['test']['iou'][-1] 
             
-            ################ ARA
+            ################ Solidity
             snap_files.sort(key=comp, reverse=False) # first epoch first
             cs = CustomSaver(dataset_path, snap_files, source, target, path_save = save_dir+'tmp/')    
             iou = cs.compute_all()
             morphology = cs.get_results()
-            all_results_ARA[source][target]["train"]['morphology'].append(morphology)
-            iou_mat_r_ARA[r][dataset2int[source]][dataset2int[target]] = float(iou)
-            all_results_ARA[source][target]["test"]["target"]['test']['iou'].append(float(iou))
+            snap = morphology['best_model']
+            shutil.copy(snap, dst_path + 'sel_' + os.path.basename(snap))# save ARA
+            all_results_Solidity[source][target]["train"]['morphology'].append(morphology)
 
             # get prediction images
-            test_command = 'python3 prediction.py ' + \
-                    '--data-dir-test "' + dataset_path + target +'/test/x" ' + \
-                    '--data-dir-test-label "' + dataset_path + target +'/test/y" ' + \
-                    '--data-list-test "' + dataset_path + target +'/test/file_list.txt" ' + \
-                    '--test-model-path "'+ morphology['best_model'] +'" ' + \
-                    '--num-workers 4 ' + \
+            for domain in [target]:
+                sets = ['test'] if domain == source else ['train', 'test', 'test_CLAHE']
+                for set in sets:
+                    rm_dir(dst_path + 'testResImg/'+ domain +'/'+ set +'/')
+                    set2 = 'train_val' if set=='train' else set # just for input data dir
+                    test_command = 'python3 prediction.py ' + \
+                    '--data-dir-test "' + dataset_path + domain +'/'+ set2 +'/x" ' + \
+                    '--data-dir-test-label "' + dataset_path + domain +'/'+ set2 +'/y" ' + \
+                    '--data-list-test "' + dataset_path + domain +'/'+ set2 +'/file_list.txt" ' + \
+                    '--test-model-path "'+ snap +'" ' + \
+                    '--num-workers 10 ' + \
                     '--gpu 0 ' + \
                     '--test_aug 1 ' + \
-                    '--save-dir "'+ dst_path + 'testResImg/'+ target +'/test/ARA/" ' 
-            try:
-                os.system(test_command)
-            except:
-                print("++++++++ Test ERROR ++++++++++")
-                continue
+                    '--save-dir "'+ dst_path + 'testResImg/'+ domain +'/'+ set2 +'/Solidity/" ' #+\
+                    #'--log-path "'+ dst_path + domain + '_Test.log" '
+                    test_start = time()
+                    try:
+                        os.system(test_command)
+                    except:
+                        print("++++++++ Test ERROR ++++++++++")
+                        continue
+                    test_time = (time()-test_start)
+                    mean_iou = custom_test(dataset_path + domain +'/'+ set2, dst_path +'testResImg/'+ domain + '/'+ set2 +'/Solidity/_iter_0')
+
+                    if domain == source:
+                        all_results_Solidity[source][target]["test"]["source"][set]['time'].append(float(test_time))
+                        all_results_Solidity[source][target]["test"]["source"][set]['iou'].append(float(mean_iou))
+                    else:
+                        all_results_Solidity[source][target]["test"]["target"][set]['time'].append(float(test_time))
+                        all_results_Solidity[source][target]["test"]["target"][set]['iou'].append(float(mean_iou))
+            iou_mat_r_Solidity[r][dataset2int[source]][dataset2int[target]] = all_results_Solidity[source][target]["test"]["target"]['test']['iou'][-1] 
   
             rm_dir(dst_path+'snapshots/')
 
@@ -262,7 +280,7 @@ for r in range(repetitions):
                                 'epoch' : epoch,
                                 'steps' : steps,
                                 'repetitions' : repetitions,
-                                'ARA' : False,
+                                'Solidity' : False,
                             },
                 "results": all_results_val,
             }    
@@ -282,32 +300,32 @@ for r in range(repetitions):
                                 'epoch' : epoch,
                                 'steps' : steps,
                                 'repetitions' : repetitions,
-                                'ARA' : False,
+                                'Solidity' : False,
                             },
                 "results": all_results_last,
             }    
             file = open(json_name_last, 'w')
             file.write(json.dumps(ALL, indent = 4, sort_keys=False))
             file.close()   
-            ################ ARA
+            ################ Solidity
             ALL = {
                 "progression": "Last finished model{:^25}  {}/{} --- Rep: {}/{}".format(run_name, str(i), len(datasets)*(len(datasets)-1), r+1, repetitions ),
                 "act_repetition": r,
                 "datasets": dataset2int,
-                "matrix per repetition": iou_mat_r_ARA,
-                "mean matrix": np.mean(iou_mat_r_ARA[:r+1], axis=0).tolist(),
+                "matrix per repetition": iou_mat_r_Solidity,
+                "mean matrix": np.mean(iou_mat_r_Solidity[:r+1], axis=0).tolist(),
                 "parameters": {
                                 'model_name' : 'DAMT-Net',
                                 'batch_size_value' : '1',
                                 'epoch' : epoch,
                                 'steps' : steps,
                                 'repetitions' : repetitions,
-                                'ARA' : True,
+                                'Solidity' : True,
                             },
-                "results": all_results_ARA,
+                "results": all_results_Solidity,
             }    
-            file = open(json_name_ARA, 'w')
+            file = open(json_name_Solidity, 'w')
             file.write(json.dumps(ALL, indent = 4, sort_keys=False))
             file.close()   
 
-print("\n----------------- FIN -----------------\n")
+print("\n----------------- END -----------------\n")
