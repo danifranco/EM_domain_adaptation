@@ -26,13 +26,16 @@ The EM datasets used are available here:
                                                                                                                         
 This repository is the base of the following work:                                                                      
     
-```                                                                                                                     
-@misc{francobarranco2022deep,
-      title={Deep learning based domain adaptation for mitochondria segmentation on EM volumes}, 
-      author={Franco-Barranco, Daniel and Pastor-Tronch, Julio and Gonzalez-Marfil, Aitor and Mu{\~{n}}oz-Barrutia, Arrate and Arganda-Carreras, Ignacio},
-      year={2022},
-      eprint={2202.10773},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+```bibtex
+@misc{francobarranco2022-dom-adaptation,
+    title = {Deep learning based domain adaptation for mitochondria segmentation on EM volumes},
+    journal = {Computer Methods and Programs in Biomedicine},
+    volume = {222},
+    pages = {106949},
+    year = {2022},
+    issn = {0169-2607},
+    doi = {https://doi.org/10.1016/j.cmpb.2022.106949},
+    url = {https://www.sciencedirect.com/science/article/pii/S0169260722003315},
+    author = {Daniel Franco-Barranco and Julio Pastor-Tronch and Aitor González-Marfil and Arrate Muñoz-Barrutia and Ignacio Arganda-Carreras},
 }
 ```                                                                                                                     
