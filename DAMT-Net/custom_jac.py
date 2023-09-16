@@ -7,7 +7,7 @@ import shutil
 def create_dir(dir):
     '''
     Create a directory if it does not exist
-    
+
     Args:
       dir: The directory that will be created
     '''
@@ -17,7 +17,7 @@ def create_dir(dir):
 def rm_dir(dir):
     '''
     Remove a directory
-    
+
     Args:
       dir: the directory to be removed
     '''
@@ -29,10 +29,10 @@ def get_xy_image_list(dir):
     Reads the training images and labels from the specified directory.
     Where 'dir'/x/ contains all images, and 'dir'/y/ contains all labels.
     Image and labels will be sorted by filename
-    
+
     Args:
       dir (str): The directory where the images are stored
-    
+
     Returns:
       two lists, one containing the training images and the other containing the corresponding labels.
     '''
@@ -54,19 +54,19 @@ def get_xy_image_list(dir):
     print( 'Label images loaded: ' + str( len(train_label_filenames)) )
 
     # read training images and labels
-    train_img = [ img_as_ubyte( io.imread( x ) ) for x in train_input_filenames ]
-    train_lbl = [ img_as_ubyte( io.imread( x ) ) for x in train_label_filenames ]
-    
+    train_img = [ img_as_ubyte( io.imread( x, as_gray=True ) ) for x in train_input_filenames ]
+    train_lbl = [ img_as_ubyte( io.imread( x, as_gray=True ) ) for x in train_label_filenames ]
+
     return train_img, train_lbl
 
 def get_image_list(dir):
     '''
     Reads all the images in the specified directory and returns a list of numpy arrays representing the
     images
-    
+
     Args:
       dir: The directory that contains the images.
-    
+
     Returns:
       A list of numpy arrays representing the images.
     '''
@@ -79,7 +79,7 @@ def get_image_list(dir):
     print( 'Label images loaded: ' + str( len(train_label_filenames)) )
 
     # read training images and labels
-    train_lbl = [ img_as_ubyte( io.imread( x ) ) for x in train_label_filenames ]
+    train_lbl = [ img_as_ubyte( io.imread( x, as_gray=True ) ) for x in train_label_filenames ]
     return train_lbl
 
 def jaccard_index_numpy(y_true, y_pred):
@@ -115,10 +115,10 @@ from PIL import Image
 def add_padding(np_img):
     '''
     Given a numpy array, add padding to the image so that the image is a multiple of 256x256
-    
+
     Args:
       np_img: the image to be padded
-    
+
     Returns:
       A numpy array of the image with the padding added.
     '''
@@ -127,7 +127,7 @@ def add_padding(np_img):
 
     if not width%256 and not height%256:
         return np_img
-    
+
     x = width/256
     y = height/256
 
@@ -136,9 +136,9 @@ def add_padding(np_img):
 
     left = int( (new_width - width)/2 )
     top = int( (new_height - height)/2 )
-    
+
     result = Image.new(image.mode, (new_width, new_height), 0)
-    
+
     result.paste(image, (left, top))
 
     return np.asarray(result)
@@ -146,11 +146,11 @@ def add_padding(np_img):
 def remove_padding(np_img, out_shape):
     '''
     Given an image and the shape of the original image, remove the padding from the image
-    
+
     Args:
       np_img: the image to remove padding from
       out_shape (int,int): the desired shape of the output image (height, width)
-    
+
     Returns:
       The image with the padding removed.
     '''
@@ -159,7 +159,7 @@ def remove_padding(np_img, out_shape):
 
     if not width%256 and not height%256: # no hacia falta padding --> no tiene
         return np_img
-    
+
     rm_left = int( (pad_width - width)/2 )
     rm_top = int( (pad_height - height)/2 )
 
@@ -172,11 +172,11 @@ import os
 def custom_test(gt_path, pred_path):
     '''
     It calculates the mean IoU for the test set.
-    
+
     Args:
       gt_path: Path to ground truth images
       pred_path: path to the folder containing the predicted images
-    
+
     Returns:
       The mean IoU of the test set.
     '''
@@ -192,7 +192,7 @@ def custom_test(gt_path, pred_path):
         iou.append( jaccard_index_numpy(Y_test[i], preds_test[i]))
     mean_iou = np.mean(iou)
     print("Test mean IoU:", mean_iou)
-    
+
     return mean_iou
 
 
@@ -207,38 +207,38 @@ def morphology_analysis(data, input, delta):
     '''
     The function morphology_analysis returns the mean and median of the area, solidity,
     eccentricity, orientation and number of objects
-    
+
     Args:
       data: List of labels (binary masks)
       input: List of images associated with the masks
       delta: This value will be added to the factor (initially 1) by which the ratio (ARA) of the image is multiplied.
-    
+
     Returns:
       The function morphology_analysis returns the mean of the area (and median, only in this case), solidity,
     eccentricity, orientation and number of objects. It returns also the ratio (ARA) value
     '''
-                                                                            
+
     p_area = []
     p_solidity = []
     p_eccentricity = []
     p_orientation = []
     n_objects=[]
     ratio_objects_area=[]
-    pixels_to_th= 10 
+    pixels_to_th= 10
     factor = 1
 
-    label_img = label(data)   # Connected components 
+    label_img = label(data)   # Connected components
 
     for i in range(label_img.shape[0]):     # for each 2D image
-        
+
         img = label_img[i]
         area=(label_img.shape[1] * label_img.shape[2])
         if delta != 0.0:
-            area = area - np.sum(np.sum((input[i]==0))) 
-                                                                                                   
-        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades                                        
-                                                                                                            
-        for i,v in enumerate(props['area']): 
+            area = area - np.sum(np.sum((input[i]==0)))
+
+        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades
+
+        for i,v in enumerate(props['area']):
             p_area.append(v)
             if v>pixels_to_th:
                 ratio = v/area
@@ -248,32 +248,32 @@ def morphology_analysis(data, input, delta):
                 p_solidity.append(props['solidity'][i])
                 p_eccentricity.append(props['eccentricity'][i])
                 p_orientation.append(props['orientation'][i])
-        n_objects.append(len(np.unique(img))-1)     
+        n_objects.append(len(np.unique(img))-1)
         factor = factor + delta
-                                                           
-    try:                                                                                                                   
-        gt_area_value = statistics.mean(p_area)                                                                                
-        gt_solidity_value = statistics.mean(p_solidity)                                                                        
-        gt_eccentricity_value = statistics.mean(p_eccentricity)                                                                
-        gt_orientation_value = statistics.mean(p_orientation) 
+
+    try:
+        gt_area_value = statistics.mean(p_area)
+        gt_solidity_value = statistics.mean(p_solidity)
+        gt_eccentricity_value = statistics.mean(p_eccentricity)
+        gt_orientation_value = statistics.mean(p_orientation)
         gt_area_value_median=statistics.median(p_area)
         gt_object_number=statistics.mean(n_objects)
         gt_ratio=statistics.mean(ratio_objects_area)
-        
+
     except:
-        gt_area_value = 0                                                                               
-        gt_solidity_value = 0                                                                      
-        gt_eccentricity_value = 0                                                              
+        gt_area_value = 0
+        gt_solidity_value = 0
+        gt_eccentricity_value = 0
         gt_orientation_value = 0
         gt_area_value_median=0
         gt_object_number=0
         gt_ratio=0
 
-    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio                         
+    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio
 
 from copy import copy
 class CustomSaver():
-    
+
     def __init__(self, dataset_path, snaps, source, target, path_save='./tmp/'):
         '''
         Args:
@@ -290,7 +290,7 @@ class CustomSaver():
             '''
             Given a list of images and labels, it will normalize the images between 0 and 1, and add padding if
             specified
-            
+
             Args:
               list_img: list of images
               list_lbl: list of labels
@@ -308,7 +308,7 @@ class CustomSaver():
             if expand_dims:
                 X_test = np.expand_dims( np.asarray(X_test, dtype=np.float32), axis=-1 ) # add extra dimension
                 Y_test = np.expand_dims( np.asarray(Y_test, dtype=np.float32), axis=-1 ) # add extra dimension
-            
+
             del test_img, test_lbl
             return X_test, Y_test
 
@@ -326,7 +326,7 @@ class CustomSaver():
         self.x=[]
         self.source = source
         self.target = target
-        
+
         self.area=[]
         self.solidity=[]
         self.eccentricity=[]
@@ -341,21 +341,21 @@ class CustomSaver():
         self.best_model_iou = 0
         self.best_model_epoch = 0
 
-        def get_delta(data, input): 
+        def get_delta(data, input):
             '''
             Given a set of images, the function returns the ratio of the maximum area of the image to the
             minimum area of the image. Ignoring ceros, almost all padding.
-            
+
             Args:
               data: List of labels (binary masks)
               input: List of images associated with the masks
-            
+
             Returns:
               the delta value.
             '''
 
-            area_max = (data[-1].shape[0] * data[-1].shape[1]-np.sum(np.sum((input[-1]==0))))   
-            area_min = (data[0].shape[0] * data[0].shape[1]-np.sum(np.sum((input[0]==0))))  
+            area_max = (data[-1].shape[0] * data[-1].shape[1]-np.sum(np.sum((input[-1]==0))))
+            area_min = (data[0].shape[0] * data[0].shape[1]-np.sum(np.sum((input[0]==0))))
             delta = (area_max/area_min)/(len(input)-1)
             return delta
 
@@ -372,7 +372,7 @@ class CustomSaver():
     def get_results(self):
         '''
         The results are stored in a dictionary. The keys are the same as the variable names above
-        
+
         Returns:
           The dictionary with several features used and obtained during the process.
         '''
@@ -386,7 +386,7 @@ class CustomSaver():
 
         morphology['Epochs'] = np.array(self.x).tolist()
         morphology['IoU'] = np.array(self.IoU_test).tolist()
-        
+
         morphology['area'] = np.array(self.area).tolist()
         morphology['solidity'] = np.array(self.solidity).tolist()
         morphology['eccentricity'] = np.array(self.eccentricity).tolist()
@@ -415,7 +415,7 @@ class CustomSaver():
             os.system(test_command)
         except:
             print("++++++++++ Test ERROR ++++++++++")
-        
+
     def on_epoch_end(self, epoch, snap):
         preds_test = get_image_list(self.dst_path + '/_iter_0') # load
         preds_test = [x/255 for x in preds_test] # normalize between 0 and 1
@@ -428,13 +428,13 @@ class CustomSaver():
         print('Jaccard in target: '+ str(jaccard))
         self.IoU_test.append(jaccard)
         self.x.append(int(epoch))
-        
+
         #target
         gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio=morphology_analysis(
                 preds_test,
                 self.trg_x_noPadding,
                 self.trg_delta)
-    
+
         self.area.append(gt_area_value)
         self.solidity.append(gt_solidity_value)
         self.eccentricity.append(gt_eccentricity_value)
@@ -449,7 +449,7 @@ class CustomSaver():
             self.best_model= snap
             self.best_model_iou = jaccard
             self.best_model_epoch = epoch
-        
+
     def compute_all(self):
         epoch = 0
         for snap in self.snaps:

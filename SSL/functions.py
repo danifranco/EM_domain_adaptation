@@ -23,12 +23,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 # Random rotation of an image by a multiple of 90 degrees
- 
+
 def random_90rotation( img ):
     return transform.rotate(img, 90*np.random.randint( 0, 5 ), preserve_range=True)
 
 # Runtime data augmentation
- 
+
 def get_train_val_generators(X_train, Y_train, X_val,Y_val,
                              batch_size=32, seed=42, rotation_range=0,
                              horizontal_flip=True, vertical_flip=True,
@@ -40,7 +40,7 @@ def get_train_val_generators(X_train, Y_train, X_val,Y_val,
                              preprocessing_function=None,
                              show_examples=False):
     X_test, Y_test = X_val,Y_val
-    
+
     # Image data generator distortion options
     data_gen_args = dict( rotation_range = rotation_range,
                           width_shift_range=width_shift_range,
@@ -61,8 +61,8 @@ def get_train_val_generators(X_train, Y_train, X_val,Y_val,
     Y_datagen.fit(Y_train, augment=True, seed=seed)
     X_train_augmented = X_datagen.flow(X_train, batch_size=batch_size, shuffle=True, seed=seed)
     Y_train_augmented = Y_datagen.flow(Y_train, batch_size=batch_size, shuffle=True, seed=seed)
-     
-    
+
+
     # Validation data, no data augmentation, but we create a generator anyway
     X_datagen_val = ImageDataGenerator(rescale=rescale)
     Y_datagen_val = ImageDataGenerator(rescale=rescale)
@@ -70,7 +70,7 @@ def get_train_val_generators(X_train, Y_train, X_val,Y_val,
     Y_datagen_val.fit(Y_test, augment=True, seed=seed)
     X_test_augmented = X_datagen_val.flow(X_test, batch_size=batch_size, shuffle=False, seed=seed)
     Y_test_augmented = Y_datagen_val.flow(Y_test, batch_size=batch_size, shuffle=False, seed=seed)
-    
+
     if show_examples:
         plt.figure(figsize=(10,10))
         # generate samples and plot
@@ -94,7 +94,7 @@ def get_train_val_generators(X_train, Y_train, X_val,Y_val,
         plt.show()
         X_train_augmented.reset()
         Y_train_augmented.reset()
-    
+
     # combine generators into one which yields image and masks
     train_generator = zip(X_train_augmented, Y_train_augmented)
     test_generator = zip(X_test_augmented, Y_test_augmented)
@@ -102,7 +102,7 @@ def get_train_val_generators(X_train, Y_train, X_val,Y_val,
     return train_generator, test_generator
 
 
- 
+
 def convert_to_oneHot(data, eps=1e-8):
     """
     Converts labelled images (`data`) to one-hot encoding.
@@ -123,7 +123,7 @@ def convert_to_oneHot(data, eps=1e-8):
 
     return data_oneHot
 
- 
+
 def add_boundary_label(lbl, dtype=np.uint16):
     """
     Find boundary labels for a labelled image.
@@ -142,7 +142,7 @@ def add_boundary_label(lbl, dtype=np.uint16):
     res[b] = 2
     return res
 
- 
+
 def onehot_encoding(lbl, n_classes=3, dtype=np.uint32):
     """ n_classes will be determined by max lbl value if its value is None """
     onehot = np.zeros((*lbl.shape, n_classes), dtype=dtype)
@@ -150,7 +150,7 @@ def onehot_encoding(lbl, n_classes=3, dtype=np.uint32):
         onehot[lbl == i, ..., i] = 1
     return onehot
 
- 
+
 def normalize(img, mean, std):
     """
     Mean-Std Normalization.
@@ -169,7 +169,7 @@ def normalize(img, mean, std):
     """
     return (img - mean) / std
 
- 
+
 def denormalize(img, mean, std):
     """
     Mean-Std De-Normalization.
@@ -188,7 +188,7 @@ def denormalize(img, mean, std):
     """
     return (img * std) + mean
 
- 
+
 def zero_out_train_data(X_train, Y_train, fraction):
     """
     Fractionates training data according to the specified `fraction`.
@@ -212,7 +212,7 @@ def zero_out_train_data(X_train, Y_train, fraction):
 
     return X_train, Y_train
 
- 
+
 def pixel_sharing_bipartite(lab1, lab2):
     assert lab1.shape == lab2.shape
     psg = np.zeros((lab1.max() + 1, lab2.max() + 1), dtype=np.int)
@@ -220,7 +220,7 @@ def pixel_sharing_bipartite(lab1, lab2):
         psg[lab1.flat[i], lab2.flat[i]] += 1
     return psg
 
- 
+
 def intersection_over_union(psg):
     """
     Computes IOU.
@@ -231,7 +231,7 @@ def intersection_over_union(psg):
     csum = np.sum(psg, 1, keepdims=True)
     return psg / (rsum + csum - psg)
 
- 
+
 def matching_iou(psg, fraction=0.5):
     """
     Computes IOU.
@@ -243,7 +243,7 @@ def matching_iou(psg, fraction=0.5):
     matching[:, 0] = False
     matching[0, :] = False
     return matching
- 
+
 def measure_precision(iou=0.5, partial_dataset=False):
     def precision(lab_gt, lab, iou=iou, partial_dataset=partial_dataset):
         """
@@ -265,7 +265,7 @@ def measure_precision(iou=0.5, partial_dataset=False):
 
     return precision
 
- 
+
 def matching_overlap(psg, fractions=(0.5,0.5)):
     """
     create a matching given pixel_sharing_bipartite of two label images based on mutually overlapping regions of sufficient size.
@@ -274,7 +274,7 @@ def matching_overlap(psg, fractions=(0.5,0.5)):
     """
     afrac, bfrac = fractions
     tmp = np.sum(psg+4e-6, axis=1, keepdims=True)
-   
+
     m0 = np.where(tmp==0,0,psg / tmp)
     tmp = np.sum(psg, axis=0, keepdims=True)
     m1 = np.where(tmp==0,0,psg / tmp)
@@ -284,7 +284,7 @@ def matching_overlap(psg, fractions=(0.5,0.5)):
     matching = matching.astype('bool')
     return matching
 
- 
+
 def measure_seg(partial_dataset=False):
     def seg(lab_gt, lab, partial_dataset=partial_dataset):
         """
@@ -310,7 +310,7 @@ def measure_seg(partial_dataset=False):
 
     return seg
 
- 
+
 def isnotebook():
     """
     Checks if code is run in a notebook, which can be useful to determine what sort of progressbar to use.
@@ -331,13 +331,13 @@ def isnotebook():
     except NameError:
         return False
 
- 
+
 def compute_labels(prediction, threshold):
     prediction_fg = prediction[..., 1]
     pred_thresholded = prediction_fg > threshold
     labels, _ = ndimage.label(pred_thresholded)
     return labels
- 
+
 def seg(lab_gt, lab,eps=1e-4):
         """
         calculate seg from pixel_sharing_bipartite
@@ -357,11 +357,11 @@ def seg(lab_gt, lab,eps=1e-4):
         n_matched = iou[matching].sum()+eps
         if np.isnan(n_matched):
             n_matched=eps
-            
+
         seg= n_matched / (n_gt+eps)
 
         return seg
- 
+
 def precision(lab_gt, lab, iou=0.5, partial_dataset=False,eps=1e-4):
         """
         precision = TP / (TP + FP + FN) i.e. "intersection over union" for a graph matching
@@ -381,7 +381,7 @@ def precision(lab_gt, lab, iou=0.5, partial_dataset=False,eps=1e-4):
             return n_matched / (n_gt + n_hyp - n_matched+eps)
 
         return precision
-   
+
 def threshold_optimization(img,lbl,model,seg_weight=2):
   optimal=[]
   thresholds=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.85,0.9,0.95]
@@ -389,8 +389,8 @@ def threshold_optimization(img,lbl,model,seg_weight=2):
     t_seg=[]
     t_prec=[]
     prediction = model.predict(img);
-    
-    for i in range(len(lbl)):    
+
+    for i in range(len(lbl)):
       image=prediction[i,:,:,:];
       label= compute_labels(image, x);
       t_seg.append(seg(lbl[i].astype(int)[:,:],label[:,:]));
@@ -408,7 +408,7 @@ from tensorflow.keras.layers import Conv2D, Conv2DTranspose, SeparableConv2D, Co
 from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D
 from tensorflow.keras.layers import Concatenate, Add, concatenate, Lambda
 from tensorflow_examples.models.pix2pix import pix2pix
- 
+
 def MobileNetEncoder(input_size = (None,None,1),
          train_encoder=False,
          random_encoder_weights=True,
@@ -419,7 +419,7 @@ def MobileNetEncoder(input_size = (None,None,1),
             input_size (array of 3 int): dimensions of the input image.
             random_encoder_weights(bool,optional):whether to initialise the encoder's weights
                to random weights or the pretrained in the imagenet or to load previously trained ones
-            Output_channels(int,optional):define the kind of segmentation(semantic) 
+            Output_channels(int,optional):define the kind of segmentation(semantic)
             and number of elements to segmentate
             max_pooling(boolean,optional):whether to apply a max_pooling or average pooling
             pre_load_weights(boolean,optional): if we want to add to our model some pretrained weights for the previous layers
@@ -427,7 +427,7 @@ def MobileNetEncoder(input_size = (None,None,1),
        Returns:
             model (Keras model): model containing the segmentation net created.
   """
-  
+
     #Now we load the base MobileNetV2 architecture for the decoder
   if random_encoder_weights==False:
                   input_size=(None,None,3)
@@ -437,15 +437,15 @@ def MobileNetEncoder(input_size = (None,None,1),
 
     # Use the activations of these layers as the skip connections(blocks 1-13) and bottleneck(block 16)
   layer_names = [
-     'block_1_expand_relu',   
-     'block_3_expand_relu',   
-     'block_6_expand_relu',   
-     'block_13_expand_relu', 
-     'block_16_project',      
+     'block_1_expand_relu',
+     'block_3_expand_relu',
+     'block_6_expand_relu',
+     'block_13_expand_relu',
+     'block_16_project',
   ]
     #Now we select the previous layers
   layers = [encoder_model.get_layer(name).output for name in layer_names]
-  
+
     # Create the feature extraction model
   down_stack = tf.keras.Model(inputs=encoder_model.input, outputs=layers)
     #Here we define the number of layers for the decoder
@@ -459,7 +459,7 @@ def MobileNetEncoder(input_size = (None,None,1),
 # we set the whole encoder to be trainable or not
   down_stack.trainable = train_encoder
   encoder_model.trainable=train_encoder
-  
+
   inputs = tf.keras.layers.Input(shape=input_size)
   x = inputs
 
@@ -486,28 +486,28 @@ def MobileNetEncoder(input_size = (None,None,1),
             1, 3, strides=2,
             padding='same',activation='sigmoid')  #128x128 -> 256x256
         x = last_denoising(x)
-            
-    
+
+
     else:
         last = tf.keras.layers.Conv2DTranspose(
             output_channels, 3, strides=2,
             padding='same',activation='softmax')  #128x128 -> 256x256
         x = last(x)
-    
+
   model= tf.keras.Model(inputs=inputs, outputs=x)#Recreates a model setting the specific layer(softmax or sigmoid act function)
   model.trainable=True
   if pre_load_weights:
-    #Loading weights layer by layer except from the last layer whose structure would change 
+    #Loading weights layer by layer except from the last layer whose structure would change
     model.load_weights(pretrained_model)
     #for i in range((len(model.layers)-1)):
      #   model.get_layer(index=i).set_weights(pretrained_model.get_layer(index=i).get_weights())
       #  print('Loaded pre-trained weights from layer',i,'of',len(model.layers))
-  
-  
+
+
   return model
 
   # Regular U-Net
- 
+
 def UNet(input_size = (None,None,1),
          filters=16,
          activation='elu',
@@ -521,7 +521,7 @@ def UNet(input_size = (None,None,1),
             input_size (array of 3 int): dimensions of the input image.
             filters (int, optional): number of channels at the first level of U-Net
             activation (str, optional): Keras available activation type.
-            kernel_initializer (str, optional): Keras available kernel 
+            kernel_initializer (str, optional): Keras available kernel
                 initializer type.
             dropout_value (real value/list/None, optional): dropout value of each
                 level and the bottleneck
@@ -537,22 +537,22 @@ def UNet(input_size = (None,None,1),
             dropout_value = [dropout_value]*5
 
   inputs = Input( input_size )
-  # Encoder 
+  # Encoder
   conv1 = Conv2D(filters, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(inputs)
   conv1 = SpatialDropout2D(dropout_value[0])(conv1) if spatial_dropout else Dropout(dropout_value[0],trainable=train_encoder) (conv1)
   conv1 = Conv2D(filters, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(conv1)
   pool1 = AveragePooling2D(pool_size=(2, 2))(conv1) if average_pooling else MaxPooling2D(pool_size=(2, 2),trainable=train_encoder)(conv1)
-  
+
   conv2 = Conv2D(filters*2, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(pool1)
   conv2 = SpatialDropout2D(dropout_value[1])(conv2) if spatial_dropout else Dropout(dropout_value[1],trainable=train_encoder) (conv2)
   conv2 = Conv2D(filters*2, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(conv2)
   pool2 = AveragePooling2D(pool_size=(2, 2))(conv2) if average_pooling else MaxPooling2D(pool_size=(2, 2),trainable=train_encoder)(conv2)
-  
+
   conv3 = Conv2D(filters*4, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(pool2)
   conv3 = SpatialDropout2D(dropout_value[2])(conv3) if spatial_dropout else Dropout(dropout_value[2],trainable=train_encoder) (conv3)
   conv3 = Conv2D(filters*4, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(conv3)
   pool3 = AveragePooling2D(pool_size=(2, 2))(conv3) if average_pooling else MaxPooling2D(pool_size=(2, 2),trainable=train_encoder)(conv3)
-  
+
   conv4 = Conv2D(filters*8, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(pool3)
   conv4 = SpatialDropout2D(dropout_value[3])(conv4) if spatial_dropout else Dropout(dropout_value[3],trainable=train_encoder)(conv4)
   conv4 = Conv2D(filters*8, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_encoder)(conv4)
@@ -562,7 +562,7 @@ def UNet(input_size = (None,None,1),
   conv5 = Conv2D(filters*16, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_bottleneck)(pool4)
   conv5 = SpatialDropout2D(dropout_value[4])(conv5) if spatial_dropout else Dropout(dropout_value[4],trainable=train_bottleneck)(conv5)
   conv5 = Conv2D(filters*16, (3,3), activation = activation, padding = 'same', kernel_initializer = kernel_initializer,trainable=train_bottleneck)(conv5)
-  
+
   # Decoder
   up6 = Conv2DTranspose(filters*8, (2, 2), strides=(2, 2), padding='same',trainable=train_decoder) (conv5)
   merge6 = concatenate([conv4,up6], axis = 3,trainable=skip_connection_training)
@@ -594,18 +594,18 @@ def UNet(input_size = (None,None,1),
             outputs = Conv2D( num_outputs, (1, 1), activation='sigmoid') (conv9)
     else:
             outputs = Conv2D( num_outputs, (1, 1), activation='softmax') (conv9)
-    
-                  
+
+
   model = Model(inputs=[inputs], outputs=[outputs])
   if pre_load_weights:
-    #Loading weights layer by layer except from the last layer whose structure would change 
+    #Loading weights layer by layer except from the last layer whose structure would change
       model.load_weights(pretrained_model)
       #for i in range((len(model.layers)-1)):
        # model.get_layer(index=i).set_weights(pretrained_model.get_layer(index=i).get_weights())
         #print('Loaded pre-trained weights from layer',i,'of',len(model.layers))
   if train_encoder==False:
       model.get_layer(index=0).trainable=False
-#         for i in range(0,16):  
+#         for i in range(0,16):
 #          model.get_layer(index=i).trainable=False
 #         print('The encoder has been succesfully frozen')
 #         if bottleneck_freezing:
@@ -618,15 +618,15 @@ def UNet(input_size = (None,None,1),
 
 
 # == Residual U-Net ==
- 
-def residual_block(x, dim, filter_size, activation='elu', 
+
+def residual_block(x, dim, filter_size, activation='elu',
                    kernel_initializer='he_normal', dropout_value=0.2, bn=False,
                    separable_conv=False, firstBlock=False, spatial_dropout=False):
 
     # Create shorcut
-    shortcut = Conv2D(dim, activation=None, kernel_size=(1, 1), 
+    shortcut = Conv2D(dim, activation=None, kernel_size=(1, 1),
                       strides=1)(x)
-    
+
     # Main path
     if firstBlock == False:
         x = BatchNormalization()(x) if bn else x
@@ -635,7 +635,7 @@ def residual_block(x, dim, filter_size, activation='elu',
         x = Conv2D(dim, filter_size, strides=1, activation=None,
                 kernel_initializer=kernel_initializer, padding='same') (x)
     else:
-        x = SeparableConv2D(dim, filter_size, strides=1, 
+        x = SeparableConv2D(dim, filter_size, strides=1,
                             activation=None, kernel_initializer=kernel_initializer,
                             padding='same') (x)
     if dropout_value:
@@ -643,7 +643,7 @@ def residual_block(x, dim, filter_size, activation='elu',
         print( str( dropout_value ) )
     x = BatchNormalization()(x) if bn else x
     x = Activation( activation )(x)
-      
+
     if separable_conv == False:
         x = Conv2D(dim, filter_size, activation=None,
                 kernel_initializer=kernel_initializer, padding='same') (x)
@@ -655,13 +655,13 @@ def residual_block(x, dim, filter_size, activation='elu',
     x = Add()([shortcut, x])
     print( 'residual block, dim: ' + str(dim) + ' , output shape: '+ str(x.shape) )
     return x
- 
+
 def level_block(x, depth, dim, fs, ac, k, d, bn, sc, fb, ap, spatial_dropout):
     do = d[depth] if d is not None else None
     if depth > 0:
         r = residual_block(x, dim, fs, ac, k, do, bn, sc, fb, spatial_dropout)
         x = AveragePooling2D((2, 2)) (r) if ap else MaxPooling2D((2, 2)) (r)
-        x = level_block(x, depth-1, (dim*2), fs, ac, k, d, bn, sc, False, ap, spatial_dropout) 
+        x = level_block(x, depth-1, (dim*2), fs, ac, k, d, bn, sc, False, ap, spatial_dropout)
         x = Conv2DTranspose(dim, (2, 2), strides=(2, 2), padding='same') (x)
         x = Concatenate()([r, x])
         x = residual_block(x, dim, fs, ac, k, do, bn, sc, False, spatial_dropout)
@@ -669,7 +669,7 @@ def level_block(x, depth, dim, fs, ac, k, d, bn, sc, fb, ap, spatial_dropout):
         x = residual_block(x, dim, fs, ac, k, do, bn, sc, False, spatial_dropout)
     return x
 
- 
+
 def ResUNet( input_size=(None, None, 1), activation='elu', kernel_initializer='he_normal',
             dropout_value=0.2, batchnorm=False, average_pooling=False, separable=False,
             filters=16, depth=4, spatial_dropout=False, long_shortcut=True,num_outputs=1):
@@ -678,12 +678,12 @@ def ResUNet( input_size=(None, None, 1), activation='elu', kernel_initializer='h
        Args:
             input_size (array of 3 int): dimensions of the input image.
             activation (str, optional): Keras available activation type.
-            kernel_initializer (str, optional): Keras available kernel 
+            kernel_initializer (str, optional): Keras available kernel
             initializer type.
             dropout_value (real value/list/None, optional): dropout value of each
             level and the bottleneck
             batchnorm (bool, optional): use batch normalization
-            average_pooling (bool, optional): use average-pooling between U-Net levels 
+            average_pooling (bool, optional): use average-pooling between U-Net levels
             (otherwise use max pooling).
             separable (bool, optional): use SeparableConv2D instead of Conv2D
             filters (int, optional): number of channels at the first level of U-Net
@@ -722,32 +722,32 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import keras
 import datetime
 import statistics
-from skimage import morphology                                                                                         
-from skimage.measure import label, regionprops_table                                                      
-from skimage.segmentation import clear_border 
- 
+from skimage import morphology
+from skimage.measure import label, regionprops_table
+from skimage.segmentation import clear_border
+
 def morphology_analysis(data,input,Source,Target):
-                                                                            
-   
+
+
     if Source!=Target:
-            
+
             if Source=='Lucchi++':
                 desired_ratio=0.004600387559051737
-               
+
                 if Target=='Kasthuri++':
                     delta=0.028086438236661453
                 elif Target=='VNC':
                     delta=0
             elif Source=='Kasthuri++':
                 desired_ratio=0.004182411757335
-               
+
                 if Target=='Lucchi++':
                     delta=0
                 elif Target=='VNC':
                     delta=0
             elif Source=='VNC':
                 desired_ratio=0.006005852143346416
-               
+
                 if Target=='Lucchi++':
                     delta=0
                 elif Target=='Kasthuri++':
@@ -760,75 +760,75 @@ def morphology_analysis(data,input,Source,Target):
     ratio_objects_area=[]
     #small_objs = 0 # Definir valor en función del GT de train. El remove se hace en 3D. De Lucchi++ a Kasthuri++ este valor lo he puesto en 4000
 
-    label_img = label(data)   # Connected components 
-    #label_img = morphology.remove_small_objects(label_img, small_objs)  # Filtrar objetos pequeños                                                
-    
-    factor=1                                                                                              
-    for i in range(label_img.shape[0]):     # Por cada imagen 2D                                                                               
-        
-        img = label_img[i] 
+    label_img = label(data)   # Connected components
+    #label_img = morphology.remove_small_objects(label_img, small_objs)  # Filtrar objetos pequeños
+
+    factor=1
+    for i in range(label_img.shape[0]):     # Por cada imagen 2D
+
+        img = label_img[i]
         if Target=='Kasthuri++':
-            area=(label_img.shape[1] * label_img.shape[2]-np.sum(np.sum((input[i]==0)))) 
+            area=(label_img.shape[1] * label_img.shape[2]-np.sum(np.sum((input[i]==0))))
         else:
             area=label_img.shape[1] * label_img.shape[2]
-        
-        
-                                                                                                            
-        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades                                        
-                                                                                                            
-        for v in props['area']: 
-            
+
+
+
+        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades
+
+        for v in props['area']:
+
             ratio=v/area*factor
             if v>10:
                 p_area.append(v)
-                ratio_objects_area.append(ratio)                                                                           
-        for v in props['solidity']: p_solidity.append(v)                                                                   
-        for v in props['eccentricity']: p_eccentricity.append(v)                                                           
-        for v in props['orientation']: p_orientation.append(v)  
-        n_objects.append(len(np.unique(img))-1) 
+                ratio_objects_area.append(ratio)
+        for v in props['solidity']: p_solidity.append(v)
+        for v in props['eccentricity']: p_eccentricity.append(v)
+        for v in props['orientation']: p_orientation.append(v)
+        n_objects.append(len(np.unique(img))-1)
         factor+=delta
 
-                                                           
-    try:                                                                                                                   
-        gt_area_value = statistics.mean(p_area)                                                                                
-        gt_solidity_value = statistics.mean(p_solidity)                                                                        
-        gt_eccentricity_value = statistics.mean(p_eccentricity)                                                                
-        gt_orientation_value = statistics.mean(p_orientation) 
+
+    try:
+        gt_area_value = statistics.mean(p_area)
+        gt_solidity_value = statistics.mean(p_solidity)
+        gt_eccentricity_value = statistics.mean(p_eccentricity)
+        gt_orientation_value = statistics.mean(p_orientation)
         gt_area_value_median=statistics.median(p_area)
         gt_object_number=statistics.mean(n_objects)
         gt_ratio=statistics.mean(ratio_objects_area)
-        
+
     except:
-        gt_area_value = 0                                                                               
-        gt_solidity_value = 0                                                                      
-        gt_eccentricity_value = 0                                                              
+        gt_area_value = 0
+        gt_solidity_value = 0
+        gt_eccentricity_value = 0
         gt_orientation_value = 0
         gt_area_value_median=0
         gt_object_number=0
         gt_ratio=0
 
-    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio                         
-    
+    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio
+
 class CustomSaver(keras.callbacks.Callback):
-     
-    
+
+
     def __init__(self, X_test,Y_test,path_save='Models',Source=None,Target=None):
         import pandas as pd
 
         """ Save params in constructor
         """
         if Source!=Target:
-            
+
             if Source=='Lucchi++':
                 self.desired_ratio=0.004600387559051737
-               
+
             elif Source=='Kasthuri++':
                 self.desired_ratio=0.004182411757335
-                
+
             elif Source=='VNC':
                 self.desired_ratio=0.006005852143346416
-               
-                
+
+
         self.batch_size=1
         self.path_save=path_save
         self.Xtest=X_test
@@ -838,7 +838,7 @@ class CustomSaver(keras.callbacks.Callback):
         self.Ytest = np.expand_dims( self.Ytest, axis=-1 )
         self.IoU_test=[]
         self.x=[]
-        
+
         self.area=[]
         self.solidity=[]
         self.eccentricity=[]
@@ -852,14 +852,14 @@ class CustomSaver(keras.callbacks.Callback):
         self.Source=Source
         self.Target=Target
 
-        
-     
+
+
     def on_epoch_end(self, epoch, logs={}):
-        
+
         if (epoch%2)==0 or epoch==0 or epoch==1:  # or save after some epoch, each k-th epoch etc.
             IoU_Dataset12Dataset1_temp=[]
             for i in range(0,len(self.Xtest)):
-                
+
                 normalizedImg = self.Xtest[i][:,:,:];
                 prediction = self.model.predict(normalizedImg[np.newaxis,:,:]);
                 image=prediction[0,:,:,0];
@@ -870,14 +870,14 @@ class CustomSaver(keras.callbacks.Callback):
             jaccard=np.mean(np.nan_to_num(IoU_Dataset12Dataset1_temp))
             print('Jaccard in target: '+ str(jaccard))
             self.jaccard=jaccard
-            
+
             self.IoU_test.append(jaccard)
             self.x.append(int(epoch))
             predictions = self.model.predict(self.Xtest,batch_size=1)
             print(predictions.shape)
-            
+
             gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio=morphology_analysis(predictions[:,:,:,0]>=0.5,self.Xtest,self.Source,self.Target)
-        
+
             self.area.append(gt_area_value)
             self.solidity.append(gt_solidity_value)
             self.eccentricity.append(gt_eccentricity_value)
@@ -887,10 +887,10 @@ class CustomSaver(keras.callbacks.Callback):
             self.ratio.append(gt_ratio)
             print('Ratio in target: '+ str(gt_ratio))
             print('Ratio in source: '+str(self.desired_ratio))
-            
+
             # if epoch>=10:
             #     if  abs(gt_ratio-self.past_ratio)>=self.tol*gt_ratio:
-            #         #Update if the difference between the actual and past ratio is  bigger than tol*actual_ratio 
+            #         #Update if the difference between the actual and past ratio is  bigger than tol*actual_ratio
             #         self.update_count=0
             #         self.best_model=f'{self.path_save}model_E{epoch}_jaccard_{jaccard:.3f}.h5'
             #         self.top_epoch=epoch
@@ -899,61 +899,61 @@ class CustomSaver(keras.callbacks.Callback):
             #         self.update_count+=1
             #         if self.update_count>5:
             #             #Stop the training as it may have converged to a value
-            #             print("Training ratio is stable, so stopping training!!")  
+            #             print("Training ratio is stable, so stopping training!!")
             #             self.best_model=f'{self.path_save}model_E{epoch}_jaccard_{jaccard:.3f}.h5'
-            #             self.top_epoch=epoch 
+            #             self.top_epoch=epoch
             #             self.model.stop_training = True
             # self.past_ratio=gt_ratio
             self.epoch=epoch
-            
-                
+
+
             if epoch>=10 or epoch<=1:
                 if  abs(gt_ratio-self.desired_ratio)<=abs(self.past_ratio-self.desired_ratio):
-                    #Update if the difference between the actual and past ratio is  bigger than tol*actual_ratio 
-                    
+                    #Update if the difference between the actual and past ratio is  bigger than tol*actual_ratio
+
                     self.best_model=f'{self.path_save}/model_ARAModel_jaccard_{jaccard:.3f}.h5'
                     self.top_epoch=epoch
                     self.past_ratio=gt_ratio
-                
+
                     self.model.save_weights(self.best_model)
             print(f'model_E{epoch}_jaccard_{jaccard:.3f}_ratio_{gt_ratio:.3f}')
-     
+
     def on_train_end(self,logs={}):
         #Save last epoch
         self.model.save_weights(f'{self.path_save}/model_LastEpoch_jaccard_{self.jaccard:.3f}_ratio_{self.past_ratio:.3f}.h5')
         #Load optimal model
         self.model.load_weights(self.best_model)
         fig, (ax1, ax2) = plt.subplots(2, sharex=True,dpi=200)
-        
+
         ax1.plot(self.x,self.IoU_test,color='black',marker='.',label='Target IoU');
         ax1.plot(self.top_epoch, self.IoU_test[int(self.x.index(self.top_epoch))], "ro",label='Optimal ratio model')
-        
-        
+
+
         ax1.set_ylabel('IoU')
-        
-        
+
+
         ax1.axhline(y=np.max(self.IoU_test), color='green', linestyle='dashed',label='Optimal IoU')
         ax1.legend()
-        
-        
-        
+
+
+
         ax2.plot(self.x,self.ratio,color='black',marker='.',label='Target Ratio');
-        
+
         ax2.set_xlabel('Number of epochs')
         ax2.set_ylabel('Ratio')
         ax2.set_yscale('log')
-        
+
         #ax2.axhline(y=8.5e-3, color='green', linestyle='dashed',label='Goal Ratio')
         ax2.plot(self.top_epoch, self.ratio[int(self.x.index(self.top_epoch))], "ro",label='Optimal ratio model')
         ax2.legend()
         fig.suptitle('Target segmentation during Fine-tuning')
         plt.savefig('Target_evolution{}.png'.format(datetime.datetime.now().time()))
         plt.close()
-        
+
         morphology=pd.DataFrame()
         morphology['Epochs']=self.x
         morphology['IoU']=self.IoU_test
-        
+
         morphology['area']=self.area
         morphology['solidity']=self.solidity
         morphology['eccentricity']=self.eccentricity
@@ -961,7 +961,7 @@ class CustomSaver(keras.callbacks.Callback):
         morphology['Median area']=self.median_area
         morphology['Object Number']=self.n_objects
         morphology['Ratio']=self.ratio
-        
+
         morphology.to_csv('per_epoch_evolution{}.txt'.format(datetime.datetime.now().time()))
 
 
@@ -990,7 +990,7 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
         pretrained_model:keras model object from where the weigths must be extracted
         plot_history(boolean): indicating whether to plot the train and validation loss graphs
 
-      
+
       Output:
       history: containing the training of the model
       model: keras model trained for a particular task
@@ -999,8 +999,8 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
   tf.keras.backend.clear_session()
   if bottleneck_freezing:
     bottleneck_train=False
-  #Here we create the training and validation generators 
-  # define data generators to do data augmentation 
+  #Here we create the training and validation generators
+  # define data generators to do data augmentation
   train_generator, val_generator = get_train_val_generators( X_train,
                                                           Y_train,
                                                          X_val,Y_val,
@@ -1015,7 +1015,7 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
                                                           batch_size=batch_size_value,
                                                           show_examples=False )
   #Here we establish the architecture based in the input model_name
-  
+
   num_filters=16
   dropout_value=0.2
   if model_name == 'UNet':
@@ -1067,14 +1067,14 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
       eval_metric = jaccard_index_final
     else:
        eval_metric = jaccard_index
-    model.compile(optimizer=optim, loss=loss_funct, metrics=[eval_metric]) 
- 
+    model.compile(optimizer=optim, loss=loss_funct, metrics=[eval_metric])
+
   # compile the model with the specific optimizer, loss function and metric
- 
+
 
     # callback for early stop
   earlystopper = EarlyStopping(patience=numEpochs, verbose=1, restore_best_weights=True)
-  
+
   if schedule == 'oneCycle':
       # callback for one-cycle schedule
       steps = np.ceil(len(X_train) / batch_size_value) * numEpochs
@@ -1085,7 +1085,7 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
                                patience=patience, min_lr=min_lr)
   else:
       lr_schedule = None
-  if schedule=='oneCycle': 
+  if schedule=='oneCycle':
      model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=(path_save+'/best_model'),verbose=1,
         save_weights_only=True,
@@ -1112,11 +1112,11 @@ def train(X_train,Y_train,X_val,Y_val,numEpochs,output_channels,patience,lr,min_
                       validation_steps=validation_steps,
                       steps_per_epoch=steps_per_epoch,
                       epochs=numEpochs, callbacks=callbacks,verbose=2)
-  if check_ev==False:                   
+  if check_ev==False:
     print('Restoring model...')
     model.load_weights(filepath=(path_save+'/best_model'))
     print('Done!')
-  
+
   if True:
     plt.figure(figsize=(14,5))
 
@@ -1153,7 +1153,7 @@ import cv2
 from skimage.util import img_as_ubyte
 from skimage import io,color
 import matplotlib.pyplot as plt
- 
+
 def create_patches( imgs,lbls,patch_size,add_noise=False,noise_level=0,random_patches=False,factor=1,filter=False,threshold=0.02,verbose=False):
     ''' Create a list of  patches out of a list of images
     Args:
@@ -1161,17 +1161,17 @@ def create_patches( imgs,lbls,patch_size,add_noise=False,noise_level=0,random_pa
         patch_size:list including both dimensions (256,256)
         add_noise: boolean to add noise to the cropped image(useful for denoising previous steps or superresolution)
         noise_level: int between 0-255 representing the sd of the gaussian noise added
-        
+
     ¡¡¡¡¡IMPORTANT if the image is not in a greyscale of 0-255 the noise must be rescaled in between 0-1 !!!!
         percentage_data:0-1 float specifying the percentage of data used for training
     Returns:
         list of image patches
     '''
-    
+
     if random_patches:
         print('Randomly cropping patches from the original image')
         lbl_patches=[]
-        patches = [] #empty list to store the corresponding patches 
+        patches = [] #empty list to store the corresponding patches
         patch_height=patch_size[0]
         patch_width=patch_size[1]
         for n in range( 0, len( imgs ) ):
@@ -1183,14 +1183,14 @@ def create_patches( imgs,lbls,patch_size,add_noise=False,noise_level=0,random_pa
             num=num_y_patches*num_x_patches*factor
             w=0
             while w<int(num):
-                
+
                 i=random.choice(range( 0, num_y_patches ))
                 j=random.choice(range( 0, num_x_patches ))
                 patch_lbl=lbl[ i * patch_width : (i+1) * patch_width,
                                             j * patch_height : (j+1) * patch_height ]
                 if filter:
                     if np.mean(np.mean(patch_lbl))>=threshold:
-                    
+
                         patches.append(img[ i * patch_width : (i+1) * patch_width,
                                             j * patch_height : (j+1) * patch_height ])
                         lbl_patches.append(lbl[ i * patch_width : (i+1) * patch_width,
@@ -1206,13 +1206,13 @@ def create_patches( imgs,lbls,patch_size,add_noise=False,noise_level=0,random_pa
                                             j * patch_height : (j+1) * patch_height ])
                     lbl_patches.append(lbl[ i * patch_width : (i+1) * patch_width,
                                             j * patch_height : (j+1) * patch_height ])
-                    
+
                     w+=1
 
     else:
         print('Sequentially cropping patches from the original image')
         lbl_patches=[]
-        patches = [] #empty list to store the corresponding patches 
+        patches = [] #empty list to store the corresponding patches
         patch_height=patch_size[0]
         patch_width=patch_size[1]
         for n in range( 0, len( imgs ) ):
@@ -1234,9 +1234,9 @@ def create_patches( imgs,lbls,patch_size,add_noise=False,noise_level=0,random_pa
                                             j * patch_height : (j+1) * patch_height ]  )
                         lbl_patches.append(lbl[ i * patch_width : (i+1) * patch_width,
                                             j * patch_height : (j+1) * patch_height ]  )
-    
+
     return patches,lbl_patches
- 
+
 def filter_patches(patch,gt_patch,percent):
     '''
     select_percent: float 0-1 representing the number of positive pixels in a patch to accept it as informative
@@ -1245,7 +1245,7 @@ def filter_patches(patch,gt_patch,percent):
     '''
     if len(patch)==len(gt_patch):
         print('Number of patches and labels is equal')
-    else: 
+    else:
         return print('Error different number of patches')
     preserved_patches=[]
     preserved_GT=[]
@@ -1257,7 +1257,7 @@ def filter_patches(patch,gt_patch,percent):
     print('Conserved:'+str(len(preserved_patches)))
     return preserved_patches, preserved_GT
 
- 
+
 def set_seed(seedValue=42):
   """Sets the seed on multiple python modules to obtain results as
   reproducible as possible.
@@ -1268,7 +1268,7 @@ def set_seed(seedValue=42):
   np.random.seed(seed=seedValue)
   tf.random.set_seed(seedValue)
   os.environ["PYTHONHASHSEED"]=str(seedValue)
-  
+
 def shuffle_fragments( imgs,number_of_patches=(3,3)):
     ''' Shuffles different fragments of the input imgs
     Args:
@@ -1278,7 +1278,7 @@ def shuffle_fragments( imgs,number_of_patches=(3,3)):
         list of image patches
     '''
     patches=[]
-    
+
     original_size = imgs.shape
     img=1*imgs# This multiplication is made to avoid further relating both variables
     num_y_patches = number_of_patches[1]#obtain the int number of patches that can be actually extracted from the original image
@@ -1287,19 +1287,19 @@ def shuffle_fragments( imgs,number_of_patches=(3,3)):
     patch_width=original_size[1]//num_y_patches
     for i in range( 0, num_y_patches ):
                 for j in range( 0, num_x_patches ):
-                 
+
                     patches.append(img[ i * patch_width : (i+1) * patch_width,
                                           j * patch_height : (j+1) * patch_height ]  )
     k=0
     random.shuffle(patches)
     for i in range( 0, num_y_patches ):
             for j in range( 0, num_x_patches ):
-              
+
                 img[ i * patch_width : (i+1) * patch_width,
                                           j * patch_height : (j+1) * patch_height ]=patches[k]
                 k+=1
     return img
- 
+
 def hide_fragments( imgs,patch_size,percent):
     ''' Sets to 0 different fragments of the input imgs
     Args:
@@ -1322,20 +1322,20 @@ def hide_fragments( imgs,patch_size,percent):
         j=random.choice(range( 0, num_x_patches ))
         img[ i * patch_width : (i+1) * patch_width,
                                   j * patch_height : (j+1) * patch_height ]=0
-    
+
     return img
 
- 
+
 def add_Gaussian_Noise(image,percentage_of_noise,print_img=False):
   """
   image:  image to be added Gaussian Noise with 0 mean and a certain std
-  percentage_of_noise:similar to 1/SNR, it represents the % of 
+  percentage_of_noise:similar to 1/SNR, it represents the % of
   the maximum value of the image that will be used as the std of the Gaussian Noise distribution
   """
   max_value=np.max(image)
   noise_level=percentage_of_noise*max_value
   Noise = np.random.normal(loc=0, scale=noise_level, size=image.shape)
-  noisy_img=np.clip(image+Noise,0,max_value)  
+  noisy_img=np.clip(image+Noise,0,max_value)
   if print_img:
     plt.figure(figsize=(10,10))
     plt.subplot(1, 2, 1)
@@ -1345,17 +1345,17 @@ def add_Gaussian_Noise(image,percentage_of_noise,print_img=False):
     plt.subplot(1, 2, 2)
     plt.imshow( noisy_img, 'gray' )
     plt.title( 'Noisy image' );
-  
+
   return noisy_img
- 
+
 def crappify(img,resizing_factor,add_noise=True,noise_level=None,Down_up=True):
- 
+
   """
   img: img to be modified
   resizing_factor(float): downsizing factor to divide the number of pixels with
-  add_noise(boolean): indicating whether to add gaussian noise before applying the resizing 
+  add_noise(boolean): indicating whether to add gaussian noise before applying the resizing
   noise_level(float): number between ]0,1] indicating the std of the Gaussian noise N(0,std)
-  Down_up(boolean): indicating whether to perform a final upsampling operation 
+  Down_up(boolean): indicating whether to perform a final upsampling operation
   to obtain an image of the same size as the original but with the corresponding loss of quality of downsizing and upsizing
   """
   w,h=img.shape
@@ -1379,14 +1379,14 @@ def crappify(img,resizing_factor,add_noise=True,noise_level=None,Down_up=True):
       resized=cv2.resize(resized, org_sz, interpolation = cv2.INTER_LINEAR)
 
   return resized
- 
+
 def reduce_number_imgs(imgs,label_imgs,percentage_data=1,normalize=True,imagenet=False):
     """
     Input:
     imgs:a list or tensor containing several images to be packed as a list after reducing its number
     label_imgs: a list or tensor containing several label images in the same order as the imgs tensor
     percentage_data: float(0-1) indicating the reduction in labels to be performed i.e 1 means that all the image will be taken into account
-    normalize: Boolean indicating whether or not to perform a normalization step in the img, no normalization is performed in the labels as it is supposed that they would already been in a binary 
+    normalize: Boolean indicating whether or not to perform a normalization step in the img, no normalization is performed in the labels as it is supposed that they would already been in a binary
     Output:
     x: list containing a subset of imgs
     y:list containing a subset of labels
@@ -1394,41 +1394,41 @@ def reduce_number_imgs(imgs,label_imgs,percentage_data=1,normalize=True,imagenet
     n=len(imgs)
     if imagenet:
       if normalize:
-        
+
         idx=random.sample(list(range(0,n)),int(n*percentage_data))
-        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx]
+        y= [label_imgs[i] for i in idx]
       else:
         idx=random.sample(list(range(0,n)),int(n*percentage_data))
-        x= [color.gray2rgb(imgs[i]) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [color.gray2rgb(imgs[i]) for i in idx]
+        y= [label_imgs[i] for i in idx]
     else:
       if normalize:
-        
+
         idx=random.sample(list(range(0,n)),int(n*percentage_data))
-        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx]
+        y= [label_imgs[i] for i in idx]
       else:
         idx=random.sample(list(range(0,n)),int(n*percentage_data))
-        x= [imgs[i] for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [imgs[i] for i in idx]
+        y= [label_imgs[i] for i in idx]
     print('Created list with '+str(len(x))+' images')
-   
+
     return x,y
- 
+
 def append_blackborder(img,height,width):
   """ Function to append a blackborder to the images in order to avoid a resizing step that may affect the resolution and pixel size
   """
   new_h=(height-img.shape[0])
   new_w=(width- img.shape[1])
-  img = cv2.copyMakeBorder(img ,new_h,0,new_w,0 , cv2.BORDER_CONSTANT) 
+  img = cv2.copyMakeBorder(img ,new_h,0,new_w,0 , cv2.BORDER_CONSTANT)
   return img
- 
+
 def append_pot2(img):
   """
   Function to append a blackborder but instead of having to specify the shape of the desired image
   the function would check the shape and append a black border in order to obtain an image that is a multiple of 2^n as required by the U-Net Models
-  
+
   """
   new_height=img.shape[0]
   new_width=img.shape[1]
@@ -1440,7 +1440,7 @@ def append_pot2(img):
   #print('An image with shape'+str(img.shape)+'has been created')
   return img
 import tensorflow as tf
- 
+
 def jaccard_index( y_true, y_pred, skip_first_mask=False ):
     ''' Define Jaccard index for multiple labels.
         Args:
@@ -1481,7 +1481,7 @@ def jaccard_index( y_true, y_pred, skip_first_mask=False ):
                       lambda: tf.cast(0.000, dtype='float64'))
 
     return jac
- 
+
 def jaccard_index_final(y_true, y_pred, t=0.5):
   """Define Jaccard index for final evaluation .
       Args:
@@ -1506,7 +1506,7 @@ def jaccard_index_final(y_true, y_pred, t=0.5):
   return jac
 
 from tensorflow.keras import losses
- 
+
 def dice_coeff(y_true, y_pred):
     """Define Dice coefficient.
        Args:
@@ -1524,20 +1524,20 @@ def dice_coeff(y_true, y_pred):
     return score
 
 # Dice coefficient loss (1 - Dice coefficient)
- 
+
 def dice_loss(y_true, y_pred):
     loss = 1 - dice_coeff(y_true, y_pred)
     return loss
 
 # Loss function combining binary cross entropy and Dice loss
- 
+
 def bce_dice_loss(y_true, y_pred):
     loss = losses.binary_crossentropy(y_true, y_pred) + dice_loss(y_true, y_pred)
     return loss
 
 # Weighted BCE+Dice
 # Inspired by https://medium.com/@Bloomore/how-to-write-a-custom-loss-function-with-additional-arguments-in-keras-5f193929f7a0
- 
+
 def weighted_bce_dice_loss(w_dice=0.5, w_bce=0.5):
     def loss(y_true, y_pred):
         return losses.binary_crossentropy(y_true, y_pred) * w_bce + dice_loss(y_true, y_pred) * w_dice
@@ -1546,22 +1546,22 @@ def weighted_bce_dice_loss(w_dice=0.5, w_bce=0.5):
 
 
 
-import keras.backend as K  
-#Based in denoiseg loss function 
- 
+import keras.backend as K
+#Based in denoiseg loss function
+
 def loss_seg(relative_weights=[1.0,1.0,5.0]):
     """
     It is based in the DenoiSeg training function used in their paper for segmentation
     Calculates Cross-Entropy Loss between the class targets and predicted outputs.
     Predicted outputs consist of three classes: Foreground, Background and Border.
     Class predictions are weighted by the parameter `relative_weights`.
-    
+
     """
 
     class_weights = tf.constant([relative_weights])
     def seg_crossentropy(class_targets, y_pred):
-  
-      
+
+
         onehot_labels = tf.reshape(class_targets, [-1, 3])# maintains the 3 dimensions for the labels regardless the size of the image or the batch size
         weights = tf.reduce_sum(class_weights * onehot_labels, axis=1)#performs a weighted sum over a particular dimension of the tensor
 
@@ -1574,7 +1574,7 @@ def loss_seg(relative_weights=[1.0,1.0,5.0]):
 
         return K.mean(a * weighted_loss)# weights once again the number of positive labels per class
     return seg_crossentropy
-        
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -1592,13 +1592,13 @@ logging.getLogger('tensorflow').setLevel(logging.ERROR)
 from tensorflow.keras.callbacks import Callback
 
 class CosineAnnealer:
-     
+
     def __init__(self, start, end, steps):
         self.start = start
         self.end = end
         self.steps = steps
         self.n = 0
-        
+
     def step(self):
         self.n += 1
         cos = np.cos(np.pi * (self.n / self.steps)) + 1
@@ -1614,74 +1614,74 @@ class OneCycleScheduler(Callback):
     In the second phase the LR decreases from `lr_max` to `lr_max / (div_factor * 1e4)` and momemtum from `mom_max` to `mom_min`.
     By default the phases are not of equal length, with the phase 1 percentage controlled by the parameter `phase_1_pct`.
     """
-     
+
     def __init__(self, lr_max, steps, mom_min=0.85, mom_max=0.95, phase_1_pct=0.3, div_factor=25.):
         super(OneCycleScheduler, self).__init__()
         lr_min = lr_max / div_factor
         final_lr = lr_max / (div_factor * 1e4)
         phase_1_steps = steps * phase_1_pct
         phase_2_steps = steps - phase_1_steps
-        
+
         self.phase_1_steps = phase_1_steps
         self.phase_2_steps = phase_2_steps
         self.phase = 0
         self.step = 0
-        
-        self.phases = [[CosineAnnealer(lr_min, lr_max, phase_1_steps), CosineAnnealer(mom_max, mom_min, phase_1_steps)], 
+
+        self.phases = [[CosineAnnealer(lr_min, lr_max, phase_1_steps), CosineAnnealer(mom_max, mom_min, phase_1_steps)],
                  [CosineAnnealer(lr_max, final_lr, phase_2_steps), CosineAnnealer(mom_min, mom_max, phase_2_steps)]]
-        
+
         self.lrs = []
         self.moms = []
-     
+
     def on_train_begin(self, logs=None):
         self.phase = 0
         self.step = 0
 
         self.set_lr(self.lr_schedule().start)
         self.set_momentum(self.mom_schedule().start)
-        
+
     def on_train_batch_begin(self, batch, logs=None):
         self.lrs.append(self.get_lr())
         self.moms.append(self.get_momentum())
-     
+
     def on_train_batch_end(self, batch, logs=None):
         self.step += 1
         if self.step >= self.phase_1_steps:
             self.phase = 1
-            
+
         self.set_lr(self.lr_schedule().step())
         self.set_momentum(self.mom_schedule().step())
-        
+
     def get_lr(self):
         try:
             return tf.keras.backend.get_value(self.model.optimizer.lr)
         except AttributeError:
             return None
-        
+
     def get_momentum(self):
         try:
             return tf.keras.backend.get_value(self.model.optimizer.momentum)
         except AttributeError:
             return None
-         
+
     def set_lr(self, lr):
         try:
             tf.keras.backend.set_value(self.model.optimizer.lr, lr)
         except AttributeError:
             pass # ignore
-         
+
     def set_momentum(self, mom):
         try:
             tf.keras.backend.set_value(self.model.optimizer.momentum, mom)
         except AttributeError:
             pass # ignore
-             
+
     def lr_schedule(self):
         return self.phases[self.phase][0]
-     
+
     def mom_schedule(self):
         return self.phases[self.phase][1]
-     
+
     def plot(self):
         ax = plt.subplot(1, 2, 1)
         ax.plot(self.lrs)
@@ -1774,8 +1774,8 @@ def Attention_U_Net_2D(image_shape = (None,None,1), activation='elu', feature_ma
      #     j+=1
       #    layer._name = 'encoder_layer_'+str(j)
        #   encoder_layers.append(layer._name)
-      
-    
+
+
     # BOTTLENECK
     x = Conv2D(feature_maps[depth], (3, 3), activation=None, kernel_initializer=k_init, padding='same',trainable=bottleneck_train)(x)
     x = BatchNormalization(trainable=bottleneck_train) (x) if batch_norm else x
@@ -1788,7 +1788,7 @@ def Attention_U_Net_2D(image_shape = (None,None,1), activation='elu', feature_ma
     x = Conv2D(feature_maps[depth], (3, 3), activation=None, kernel_initializer=k_init, padding='same',trainable=bottleneck_train) (x)
     x = BatchNormalization(trainable=bottleneck_train) (x) if batch_norm else x
     x = Activation(activation,trainable=bottleneck_train) (x)
-   
+
     # DECODER
     for i in range(depth-1, -1, -1):
         x = Conv2DTranspose(feature_maps[i], (2, 2), strides=(2, 2), padding='same',trainable=train_decoder) (x)
@@ -1815,12 +1815,12 @@ def Attention_U_Net_2D(image_shape = (None,None,1), activation='elu', feature_ma
             outputs = Conv2D( num_outputs, (1, 1), activation='sigmoid') (x)
         else:
             outputs = Conv2D( num_outputs, (1, 1), activation='softmax') (x)
-    
-    
+
+
 
     model = Model(inputs=[inputs], outputs=[outputs])
     if pre_load_weights:
-        #Loading weights layer by layer except from the last layer whose structure would change 
+        #Loading weights layer by layer except from the last layer whose structure would change
         model.load_weights(pretrained_model)
         #for i in range((len(model.layers)-1)):
          #   model.get_layer(index=i).set_weights(pretrained_model.get_layer(index=i).get_weights())
@@ -1829,12 +1829,12 @@ def Attention_U_Net_2D(image_shape = (None,None,1), activation='elu', feature_ma
               #Now we select the previous layers
             #for name in encoder_layers:
               #model.get_layer(name).trainable=train_encoder
-    
-            #for i in range(0,25):  
+
+            #for i in range(0,25):
               model.get_layer(index=0).trainable=False
              # print('The encoder has been succesfully frozen')
     #if bottleneck_train==False:
-              #for i in range(25,33):  
+              #for i in range(25,33):
               #  model.get_layer(index=i).trainable=False
                # print('The bottleneck has been succesfully frozen')
 
@@ -1874,16 +1874,16 @@ def AttentionBlock(x, shortcut, filters, batch_norm,trainable=False):
     psi = BatchNormalization(trainable=trainable) (psi) if batch_norm else psi
     psi = Activation('sigmoid',trainable=trainable)(psi)
     x = Multiply(trainable=trainable)([x,psi])
-    
+
     return x
- 
+
 def gpu_select(GPU_availability,GPU):
-  
+
   if GPU_availability:
       os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID";
       os.environ["CUDA_VISIBLE_DEVICES"] = GPU;
   print('GPU:'+GPU+' was selected')
- 
+
 def set_seed(seedValue=42):
   """Sets the seed on multiple python modules to obtain results as
   reproducible as possible.
@@ -1898,7 +1898,7 @@ def set_seed(seedValue=42):
 from skimage.util import img_as_ubyte
 from skimage import io
 from matplotlib import pyplot as plt
- 
+
 def load_img(train_input_path,train_label_path):
     #loading and sorting the filenames in order to read the images
   train_input_filenames = [x for x in os.listdir( train_input_path) if x.endswith(".png") or x.endswith('.tif')]
@@ -1910,10 +1910,10 @@ def load_img(train_input_path,train_label_path):
   print( 'Dataset label images loaded: ' + str( len(train_label_filenames)) )
 
   # read training images and labels
-  train_img = [ io.imread( train_input_path + '/' + x ) /255.0 for x in train_input_filenames ]
-  train_lbl = [ io.imread( train_label_path + '/' + x ) /255.0 for x in train_label_filenames ]
+  train_img = [ io.imread( train_input_path + '/' + x, as_gray=True ) /255.0 for x in train_input_filenames ]
+  train_lbl = [ io.imread( train_label_path + '/' + x, as_gray=True ) /255.0 for x in train_label_filenames ]
   return train_img, train_lbl
- 
+
 def prepare_training_data(imgs,lbls):
   #  input
   X = np.asarray(imgs)
@@ -1925,14 +1925,14 @@ def prepare_training_data(imgs,lbls):
   Y = np.expand_dims( Y, axis=-1 ) # add extra dimension
   print(Y[0].shape)
   return X,Y
- 
+
 def evaluate_ranges(X):
   #@title
   values=[]
   for i in range(len(X[:,0,0,0])):
     values.append(np.max(X[i,:,:,:]))
   print('The range of max values is between:',np.min(values),'and',np.max(values))
- 
+
 def prepare_test_data(test_img,test_lbl):
 
   X_test = [  np.expand_dims( append_pot2(x), axis=-1 )  for x in test_img ];
@@ -1942,13 +1942,13 @@ def prepare_test_data(test_img,test_lbl):
   print(Y_test[0].shape)
 
   return X_test,Y_test,test_lbl
- 
+
 from PIL import Image
 
 def evaluate_test(X_test,test_lbl,model,save_img=False,path=None):
     IoU_Dataset12Dataset1_temp=[]
     for i in range(0,len(X_test)):
-      
+
       print('Evaluating test image',i)
       normalizedImg = X_test[i][:,:,:];
       prediction = model.predict(normalizedImg[np.newaxis,:,:]);
@@ -1957,9 +1957,9 @@ def evaluate_test(X_test,test_lbl,model,save_img=False,path=None):
       filtered_img=image[:,:,0]*filtered_img[:,:,0]
       if save_img:
         try:
-            Image.fromarray((filtered_img[:,:]*255).astype(np.uint8)).save(f'{path}/prediction_{str(i)}.png')   
+            Image.fromarray((filtered_img[:,:]*255).astype(np.uint8)).save(f'{path}/prediction_{str(i)}.png')
         except Exception as e: print(e)
-    
+
       IoU_Dataset12Dataset1_temp.append(jaccard_index_final(test_lbl[i],filtered_img));
     return np.mean(np.nan_to_num(IoU_Dataset12Dataset1_temp))
 
@@ -1972,7 +1972,7 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 from email import encoders
 
- 
+
 def send_mail(send_from, send_to, subject, message, files=[],
               server="localhost", port=587, username='', password='',
               use_tls=True):
@@ -1991,7 +1991,7 @@ def send_mail(send_from, send_to, subject, message, files=[],
         use_tls (bool): use TLS mode
     """
     try:
-        
+
 
         msg = MIMEMultipart()
         msg['From'] = send_from
@@ -2019,31 +2019,31 @@ def send_mail(send_from, send_to, subject, message, files=[],
         print ("Email sent successfully!")
     except Exception as ex:
         print ("Something went wrong….",ex)
-  
+
 def reduce_number_imgs_num(imgs,label_imgs,num_patches=1,normalize=True,imagenet=False):
     n=len(imgs)
     if imagenet:
       if normalize:
-        
+
         idx=random.sample(list(range(0,n)),int(num_patches))
-        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx]
+        y= [label_imgs[i] for i in idx]
       else:
         idx=random.sample(list(range(0,n)),int(num_patches))
-        x= [color.gray2rgb(imgs[i]) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [color.gray2rgb(imgs[i]) for i in idx]
+        y= [label_imgs[i] for i in idx]
     else:
       if normalize:
-        
+
         idx=random.sample(list(range(0,n)),int(num_patches))
-        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [cv2.normalize(imgs[i]/np.max(imgs[i]), None, 0, 1, cv2.NORM_MINMAX) for i in idx]
+        y= [label_imgs[i] for i in idx]
       else:
         idx=random.sample(list(range(0,n)),int(num_patches))
-        x= [imgs[i] for i in idx] 
-        y= [label_imgs[i] for i in idx] 
+        x= [imgs[i] for i in idx]
+        y= [label_imgs[i] for i in idx]
     print('Created list with '+str(len(x))+' images')
-   
+
     return x,y
 
 from skimage.feature import hog
@@ -2060,7 +2060,7 @@ def visualize_feature_maps(model,layer,normalize=True,n_filters=6,save_img=False
 	# layer: the layer whose weights we want to visualize
 	# normalize: whether to normalize the weights around 0 to be able to plot them as an image
 	# n_filters: the number of filters from a layer we want to visualize
-	# save_img:boolean indicating whether to save the output 
+	# save_img:boolean indicating whether to save the output
 	# path: str defining the path and name of hte output file
 
 
@@ -2086,4 +2086,4 @@ def visualize_feature_maps(model,layer,normalize=True,n_filters=6,save_img=False
             ix += 1
     # show the figure
     plt.show()
-	
+

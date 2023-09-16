@@ -44,10 +44,10 @@ def get_xy_image_list(dir):
     Reads the training images and labels from the specified directory.
     Where 'dir'/x/ contains all images, and 'dir'/y/ contains all labels.
     Image and labels will be sorted by filename
-    
+
     Args:
       dir (str): The directory where the images are stored
-    
+
     Returns:
       two lists, one containing the training images and the other containing the corresponding labels.
     '''
@@ -67,19 +67,19 @@ def get_xy_image_list(dir):
     print( 'Input images loaded: {} -- Label images loaded: {}\n\tpath: {}'.format(len(train_input_filenames), len(train_label_filenames), dir) )
 
     # read training images and labels
-    train_img = [ img_as_ubyte( np.array(io.imread( x ), dtype='uint8') ) for x in train_input_filenames ]
-    train_lbl = [ img_as_ubyte( np.array(io.imread( x ), dtype='uint8') ) for x in train_label_filenames ]
-    
+    train_img = [ img_as_ubyte( np.array(io.imread( x, as_gray=True ), dtype='uint8') ) for x in train_input_filenames ]
+    train_lbl = [ img_as_ubyte( np.array(io.imread( x, as_gray=True ), dtype='uint8') ) for x in train_label_filenames ]
+
     return train_img, train_lbl
 
 def get_image_list(dir):
     '''
     Reads all the images in the specified directory and returns a list of numpy arrays representing the
     images
-    
+
     Args:
       dir: The directory that contains the images.
-    
+
     Returns:
       A list of numpy arrays representing the images.
     '''
@@ -93,7 +93,7 @@ def get_image_list(dir):
     print( 'Label images loaded: ' + str( len(train_label_filenames)) )
 
     # read training images and labels
-    train_lbl = [ img_as_ubyte( np.array(io.imread( x ), dtype='uint8') ) for x in train_label_filenames ]
+    train_lbl = [ img_as_ubyte( np.array(io.imread( x, as_gray=True ), dtype='uint8') ) for x in train_label_filenames ]
     return train_lbl
 
 def create_patches( imgs, num_x_patches, num_y_patches ):
@@ -102,14 +102,14 @@ def create_patches( imgs, num_x_patches, num_y_patches ):
         imgs: list of input images
         num_x_patches: number of patches in the X axis
         num_y_patches: number of patches in the Y axis
-        
+
     Returns:
         list of image patches
     '''
     original_size = imgs[0].shape
     patch_width = original_size[ 0 ] // num_y_patches
     patch_height = original_size[ 1 ] // num_x_patches
-    
+
     patches = []
     for n in range( 0, len( imgs ) ):
         image = imgs[ n ]
@@ -123,7 +123,7 @@ def create_patches( imgs, num_x_patches, num_y_patches ):
 # a given size
 def create_random_patches( input_imgs, lbl_imgs, num_patches,
                           shape ):
-    ''' 
+    '''
     Create a list of images patches out of a list of images
 
     Args:
@@ -131,7 +131,7 @@ def create_random_patches( input_imgs, lbl_imgs, num_patches,
         lbl_imgs: list of input images
         num_patches (int): number of patches for each image.
         shape (2D array): size of the LR patches. Example: [128, 128].
-        
+
     Returns:
         list of image patches and patches of corresponding labels
     '''
@@ -140,7 +140,7 @@ def create_random_patches( input_imgs, lbl_imgs, num_patches,
     img = input_imgs[0]
 
     original_size = img.shape
-    
+
     input_patches = []
     label_patches = []
     for n in range( 0, len( input_imgs ) ):
@@ -160,10 +160,10 @@ from PIL import Image
 def add_padding(np_img):
     '''
     Given a numpy array, add padding to the image so that the image is a multiple of 256x256
-    
+
     Args:
       np_img: the image to be padded
-    
+
     Returns:
       A numpy array of the image with the padding added.
     '''
@@ -172,7 +172,7 @@ def add_padding(np_img):
 
     if not width%256 and not height%256:
         return np_img
-    
+
     x = width/256
     y = height/256
 
@@ -181,9 +181,9 @@ def add_padding(np_img):
 
     left = int( (new_width - width)/2 )
     top = int( (new_height - height)/2 )
-    
+
     result = Image.new(image.mode, (new_width, new_height), 0)
-    
+
     result.paste(image, (left, top))
 
     return np.asarray(result)
@@ -191,11 +191,11 @@ def add_padding(np_img):
 def remove_padding(np_img, out_shape):
     '''
     Given an image and the shape of the original image, remove the padding from the image
-    
+
     Args:
       np_img: the image to remove padding from
       out_shape (int,int): the desired shape of the output image (height, width)
-    
+
     Returns:
       The image with the padding removed.
     '''
@@ -204,7 +204,7 @@ def remove_padding(np_img, out_shape):
 
     if not width%256 and not height%256: # no hacia falta padding --> no tiene
         return np_img
-    
+
     rm_left = int( (pad_width - width)/2 )
     rm_top = int( (pad_height - height)/2 )
 
@@ -223,11 +223,11 @@ def histogram_matching(target_imgs):
      using Linear regression, with the real number of 1 and 2. It returns a function that apply histogram matching,
      using the calculated histogram. This returned function will apply a random histogram matching to each image with probability
      apply_prob.
-    
+
     Args:
       target_imgs: the target domain images, from which mean histogram will be obtained (with predicted number of 0s)
       apply_prob: probability of applying the histogram matching
-    
+
     Returns:
       A function that takes an image as input and returns a modified image or the original image, with
     the given probability.
@@ -238,13 +238,13 @@ def histogram_matching(target_imgs):
     reg = LR.fit(np.reshape([1,2],(-1,1)), np.reshape(hist_mean[1:3],(-1,1))) # use next 2 values to predict using LR
     hist_mean[0] = max(0, float(reg.predict(np.reshape([0,],(-1,1))))) # predict 0 values (due to padding)
     hist_mean = hist_mean / np.array(target_imgs).shape[0] # number of images
-    
+
     # calculate normalized quantiles
     #tmpl_size = target_imgs[0].size # once 0 value is predicted, the sum of pixels are not the same as the one in the image, so size is no longer useful
-    tmpl_size = np.sum(hist_mean) 
+    tmpl_size = np.sum(hist_mean)
     tmpl_quantiles = np.cumsum(hist_mean) / tmpl_size
-    
-    # based on scikit implementation. 
+
+    # based on scikit implementation.
     # source: https://github.com/scikit-image/scikit-image/blob/v0.18.0/skimage/exposure/histogram_matching.py#L22-L70
     def _match_cumulative_cdf(source, tmpl_quantiles):
         src_values, src_unique_indices, src_counts = np.unique(source.ravel(),
@@ -260,12 +260,12 @@ def histogram_matching(target_imgs):
             else:
                 # images can be completely black
                 pred_0 = 1 if len(src_counts) == 1 else 0 # 1 if completely black, else 0
-           
+
             src_size = (source.size - src_counts[0]) + pred_0 # more efficient than 'sum(src_counts)'
             src_counts[0] = pred_0 # replace histogram 0s with predictted value
         else:
             src_size = source.size # number of pixels
-        
+
         src_quantiles = np.cumsum(src_counts) / src_size # normalize
         interp_a_values = np.interp(src_quantiles, tmpl_quantiles, np.arange(len(tmpl_quantiles)))
         if src_values[0] == 0:
@@ -279,21 +279,21 @@ def histogram_matching(target_imgs):
         else:
             result = image
         return result
-    
+
     return random_histogram_matching
 
 def cond_hist_match(apply, target_img):
     '''
     If apply is True, then it will return the histogram_matching function, otherwise it will return the
     do_nothing function
-    
+
     Args:
       apply (bool): Whether to apply the transformation or not
       target_img: List of target domain images (from which mean histogram will be obtained)
       apply_prob: The probability of applying the histogram matching
-    
+
     Returns:
-      A function that takes an image as input and returns the image with the histogram matched (with given probability) 
+      A function that takes an image as input and returns the image with the histogram matched (with given probability)
       or the image itself if apply == False.
     '''
 
@@ -307,12 +307,12 @@ def cond_hist_match(apply, target_img):
 
 def get_one_domain_generator(D1_gen):
     '''
-    Given a generator that yields a batch of images and their masks, 
-    this function will return a generator that yields the same batch of images and their masks, 
-    but with an extra channel that is all ones (used to indicate that the image contains a mask). 
-    
-    This is useful for the UNet, which expects a channel for the "bool" mask. 
-    
+    Given a generator that yields a batch of images and their masks,
+    this function will return a generator that yields the same batch of images and their masks,
+    but with an extra channel that is all ones (used to indicate that the image contains a mask).
+
+    This is useful for the UNet, which expects a channel for the "bool" mask.
+
     Args:
       D1_gen: The generator for the first domain.
     '''
@@ -328,7 +328,7 @@ def get_random_multidomain_generator(D1_gen, D2_gen, D1_size, D2_size):
     Given a generator for each domain, it creates a generator that randomly chooses one of the two
     generators to yield from. Respecting the size of each dataset. If one generator has iterated all images, the other's
     will be used. Once, both datasets have been iterated completely, it will starts again from 0.
-    
+
     Args:
       D1_gen: The generator for the first domain. Source domain, with masks.
       D2_gen: The generator for the second domain. Target domain, without masks.
@@ -349,9 +349,9 @@ def get_random_multidomain_generator(D1_gen, D2_gen, D1_size, D2_size):
                 x,y = next(D2_gen)
                 has_mask = np.array([0], dtype="float32")
                 D2_s -= 1
-            elif D2_s <= 0:   
+            elif D2_s <= 0:
                 x,y = next(D1_gen)
-                has_mask = np.array([1], dtype="float32") 
+                has_mask = np.array([1], dtype="float32")
                 D1_s -= 1
             else:
                 if random.random() < 0.5:
@@ -370,11 +370,11 @@ def get_random_multidomain_generator(D1_gen, D2_gen, D1_size, D2_size):
 
 def concatenate_train_val_generators(train_gen, val_gen, train_size, val_size):
     '''
-    Given a training and validation generator, and the number of training and validation samples, 
+    Given a training and validation generator, and the number of training and validation samples,
     it concatenates the two generators and returns a generator that yields training and validation
     samples respecting the size of each dataset. If one generator has iterated all images, the other's
     will be used. Once, both datasets have been iterated completely, it will starts again from 0.
-    
+
     Args:
       train_gen: The generator for training data.
       val_gen: The validation generator.
@@ -403,17 +403,17 @@ BCE = tf.keras.losses.BinaryCrossentropy(from_logits=False)
 @tf.function
 def new_multitask_seg_loss(y_true, y_pred):
     '''
-    If there is a mask, calculate the binary cross entropy between the mask and the predicted mask. 
+    If there is a mask, calculate the binary cross entropy between the mask and the predicted mask.
     If there is no mask, return 0.
 
     Note:
       all the batch have to be of the same domain,
       all the batch with masks or without, mixed batches does not work
-    
+
     Args:
       y_true: The true values for the batch.
       y_pred: the output of the model, the final layer of the neural network.
-    
+
     Returns:
       The loss value.
     '''
@@ -460,13 +460,13 @@ logging.getLogger('tensorflow').setLevel(logging.ERROR)
 from tensorflow.keras.callbacks import Callback
 
 class CosineAnnealer:
-    
+
     def __init__(self, start, end, steps):
         self.start = start
         self.end = end
         self.steps = steps
         self.n = 0
-        
+
     def step(self):
         self.n += 1
         cos = np.cos(np.pi * (self.n / self.steps)) + 1
@@ -489,15 +489,15 @@ class OneCycleScheduler(Callback):
         final_lr = lr_max / (div_factor * 1e4)
         phase_1_steps = steps * phase_1_pct
         phase_2_steps = steps - phase_1_steps
-        
+
         self.phase_1_steps = phase_1_steps
         self.phase_2_steps = phase_2_steps
         self.phase = 0
         self.step = 0
-        
-        self.phases = [[CosineAnnealer(lr_min, lr_max, phase_1_steps), CosineAnnealer(mom_max, mom_min, phase_1_steps)], 
+
+        self.phases = [[CosineAnnealer(lr_min, lr_max, phase_1_steps), CosineAnnealer(mom_max, mom_min, phase_1_steps)],
                  [CosineAnnealer(lr_max, final_lr, phase_2_steps), CosineAnnealer(mom_min, mom_max, phase_2_steps)]]
-        
+
         self.lrs = []
         self.moms = []
 
@@ -507,7 +507,7 @@ class OneCycleScheduler(Callback):
 
         self.set_lr(self.lr_schedule().start)
         self.set_momentum(self.mom_schedule().start)
-        
+
     def on_train_batch_begin(self, batch, logs=None):
         self.lrs.append(self.get_lr())
         self.moms.append(self.get_momentum())
@@ -516,28 +516,28 @@ class OneCycleScheduler(Callback):
         self.step += 1
         if self.step >= self.phase_1_steps:
             self.phase = 1
-            
+
         self.set_lr(self.lr_schedule().step())
         self.set_momentum(self.mom_schedule().step())
-        
+
     def get_lr(self):
         try:
             return tf.keras.backend.get_value(self.model.optimizer.lr)
         except AttributeError:
             return None
-        
+
     def get_momentum(self):
         try:
             return tf.keras.backend.get_value(self.model.optimizer.momentum)
         except AttributeError:
             return None
-        
+
     def set_lr(self, lr):
         try:
             tf.keras.backend.set_value(self.model.optimizer.lr, lr)
         except AttributeError:
             pass # ignore
-        
+
     def set_momentum(self, mom):
         try:
             tf.keras.backend.set_value(self.model.optimizer.momentum, mom)
@@ -546,10 +546,10 @@ class OneCycleScheduler(Callback):
 
     def lr_schedule(self):
         return self.phases[self.phase][0]
-    
+
     def mom_schedule(self):
         return self.phases[self.phase][1]
-    
+
     def plot(self):
         return
         ax = plt.subplot(1, 2, 1)
@@ -567,10 +567,10 @@ from skimage import transform
 def random_90rotation( img ):
     '''
     Given an image, rotate it by a random amount of degrees (multiple of 90)
-    
+
     Args:
       img: The image to be rotated
-    
+
     Returns:
       The image rotated.
     '''
@@ -592,7 +592,7 @@ def get_train_val_generators(X_data, Y_data, validation_split=0.25,
                                                         train_size=1-validation_split,
                                                         test_size=validation_split,
                                                         random_state=seed, shuffle=False)
-    
+
     # Image data generator distortion options
     data_gen_args_X = dict( rotation_range = rotation_range,
                           width_shift_range=width_shift_range,
@@ -604,7 +604,7 @@ def get_train_val_generators(X_data, Y_data, validation_split=0.25,
                           vertical_flip=vertical_flip,
                           rescale = rescale,
                           fill_mode='reflect')
-    
+
     # Image data generator distortion options
     data_gen_args_Y = dict( rotation_range = rotation_range,
                           width_shift_range=width_shift_range,
@@ -625,8 +625,8 @@ def get_train_val_generators(X_data, Y_data, validation_split=0.25,
     Y_datagen.fit(Y_train, augment=True, seed=seed)
     X_train_augmented = X_datagen.flow(X_train, batch_size=batch_size, shuffle=True, seed=seed)
     Y_train_augmented = Y_datagen.flow(Y_train, batch_size=batch_size, shuffle=True, seed=seed)
-     
-    
+
+
     # Validation data, no data augmentation, but we create a generator anyway
     X_datagen_val = ImageDataGenerator(rescale=rescale)
     Y_datagen_val = ImageDataGenerator(rescale=rescale)
@@ -634,11 +634,11 @@ def get_train_val_generators(X_data, Y_data, validation_split=0.25,
     Y_datagen_val.fit(Y_test, augment=True, seed=seed)
     X_test_augmented = X_datagen_val.flow(X_test, batch_size=batch_size, shuffle=False, seed=seed)
     Y_test_augmented = Y_datagen_val.flow(Y_test, batch_size=batch_size, shuffle=False, seed=seed)
-    
+
     # combine generators into one which yields image and masks
     train_generator = zip(X_train_augmented, Y_train_augmented)
     test_generator = zip(X_test_augmented, Y_test_augmented)
-    
+
     return train_generator, test_generator
 
 def new_jaccard(y_true, y_pred):
@@ -649,11 +649,11 @@ def new_jaccard(y_true, y_pred):
     Note:
       all the batch have to be of the same domain,
       all the batch with masks or without, mixed batches does not work
-    
+
     Args:
       y_true: The ground truth tensor, same dimensions as 'y_pred'
       y_pred: the output of the model, the final activation map of the model.
-    
+
     Returns:
       The loss function returns the mean of the batch.
     '''
@@ -711,12 +711,12 @@ def Att_YNet(image_shape, activation='elu', feature_maps=[16, 32, 64, 128, 256],
            Kernel initialization for convolutional layers.
        n_classes: int, optional
            Number of classes.
-      
+
        Returns
        -------
        model : Keras model
            Model containing the Attention Y-Net.
-       
+
     """
 
     if len(feature_maps) != len(drop_values):
@@ -859,12 +859,12 @@ def morphology_analysis(data, input, delta):
     '''
     The function morphology_analysis returns the mean and median of the area, solidity,
     eccentricity, orientation and number of objects
-    
+
     Args:
       data: List of labels (binary masks)
       input: List of images associated with the masks
       delta: This value will be added to the factor (initially 1) by which the ratio (ARA) of the image is multiplied.
-    
+
     Returns:
       The function morphology_analysis returns the mean of the area (and median, only in this case), solidity,
     eccentricity, orientation and number of objects. It returns also the ratio (ARA) value
@@ -876,21 +876,21 @@ def morphology_analysis(data, input, delta):
     p_orientation = []
     n_objects=[]
     ratio_objects_area=[]
-    pixels_to_th= 10 
+    pixels_to_th= 10
     factor = 1 # para kasthuri
 
-    label_img = label(data)   # Connected components 
-                                                                                                     
-    for i in range(label_img.shape[0]):     # Por cada imagen 2D                                                                               
-        
+    label_img = label(data)   # Connected components
+
+    for i in range(label_img.shape[0]):     # Por cada imagen 2D
+
         img = label_img[i]
         area=(label_img.shape[1] * label_img.shape[2])
         if delta != 0.0:
-            area = area - np.sum(np.sum((input[i]==0))) 
-                                                                                                   
-        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades                                        
-                                                                                                            
-        for i,v in enumerate(props['area']): 
+            area = area - np.sum(np.sum((input[i]==0)))
+
+        props = regionprops_table(img, properties=('area', 'solidity', 'eccentricity', 'orientation'))    # Sacar las propiedades
+
+        for i,v in enumerate(props['area']):
             p_area.append(v)
             if v>pixels_to_th:
                 #divido el tamaño de cada objeto por el área útil de cada slice(esto es sobre todo por kasthuri)
@@ -901,29 +901,29 @@ def morphology_analysis(data, input, delta):
                 p_solidity.append(props['solidity'][i])
                 p_eccentricity.append(props['eccentricity'][i])
                 p_orientation.append(props['orientation'][i])
-        n_objects.append(len(np.unique(img))-1)     
+        n_objects.append(len(np.unique(img))-1)
         factor = factor + delta
-                                                           
-    try:                                                                                                                   
-        gt_area_value = statistics.mean(p_area)                                                                                
-        gt_solidity_value = statistics.mean(p_solidity)                                                                        
-        gt_eccentricity_value = statistics.mean(p_eccentricity)                                                                
-        gt_orientation_value = statistics.mean(p_orientation) 
+
+    try:
+        gt_area_value = statistics.mean(p_area)
+        gt_solidity_value = statistics.mean(p_solidity)
+        gt_eccentricity_value = statistics.mean(p_eccentricity)
+        gt_orientation_value = statistics.mean(p_orientation)
         gt_area_value_median=statistics.median(p_area)
         gt_object_number=statistics.mean(n_objects)
         gt_ratio=statistics.mean(ratio_objects_area)
-        
+
     except:
-        gt_area_value = 0                                                                               
-        gt_solidity_value = 0                                                                      
-        gt_eccentricity_value = 0                                                              
+        gt_area_value = 0
+        gt_solidity_value = 0
+        gt_eccentricity_value = 0
         gt_orientation_value = 0
         gt_area_value_median=0
         gt_object_number=0
         gt_ratio=0
 
-    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio                         
-                          
+    return gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio
+
 from copy import copy
 class CustomSaver(keras.callbacks.Callback):
 
@@ -942,7 +942,7 @@ class CustomSaver(keras.callbacks.Callback):
             '''
             Given a list of images and labels, it will normalize the images between 0 and 1, and add padding if
             specified
-            
+
             Args:
               list_img: list of images
               list_lbl: list of labels
@@ -960,14 +960,14 @@ class CustomSaver(keras.callbacks.Callback):
             if expand_dims:
                 X_test = np.expand_dims( np.asarray(X_test, dtype=np.float32), axis=-1 ) # add extra dimension
                 Y_test = np.expand_dims( np.asarray(Y_test, dtype=np.float32), axis=-1 ) # add extra dimension
-            
+
             del test_img, test_lbl
             return X_test, Y_test
 
         self.original_test_img, test_lbl = get_xy_image_list(data_path)
         self.original_src_test_img, src_test_lbl = get_xy_image_list(src_data_path)
 
-        """ Se le pasa el X_test y el Y_test al usarlo para aprovechar y evaluar directamente en cada época 
+        """ Se le pasa el X_test y el Y_test al usarlo para aprovechar y evaluar directamente en cada época
         y no tener que recargar luego los pesos
         """
         self.batch_size=1
@@ -978,7 +978,7 @@ class CustomSaver(keras.callbacks.Callback):
         self.x=[]
         self.source = source
         self.target = target
-        
+
         self.area=[]
         self.solidity=[]
         self.eccentricity=[]
@@ -995,17 +995,17 @@ class CustomSaver(keras.callbacks.Callback):
             '''
             Given a set of images, the function returns the ratio of the maximum area of the image to the
             minimum area of the image. Ignoring ceros, almost all padding.
-            
+
             Args:
               data: List of labels (binary masks)
               input: List of images associated with the masks
-            
+
             Returns:
               the delta value.
             '''
 
-            area_max = (data[-1].shape[0] * data[-1].shape[1]-np.sum(np.sum((input[-1]==0))))   
-            area_min = (data[0].shape[0] * data[0].shape[1]-np.sum(np.sum((input[0]==0))))  
+            area_max = (data[-1].shape[0] * data[-1].shape[1]-np.sum(np.sum((input[-1]==0))))
+            area_min = (data[0].shape[0] * data[0].shape[1]-np.sum(np.sum((input[0]==0))))
             delta = (area_max/area_min)/(len(input)-1)
             return delta
 
@@ -1024,7 +1024,7 @@ class CustomSaver(keras.callbacks.Callback):
     def get_results(self):
         '''
         The results are stored in a dictionary. The keys are the same as the variable names above
-        
+
         Returns:
           The dictionary with several features used and obtained during the process.
         '''
@@ -1035,7 +1035,7 @@ class CustomSaver(keras.callbacks.Callback):
         morphology['src_desired_solidity'] = float(self.source_desired_solidity)
         morphology['Epochs'] = np.array(self.x).tolist()
         morphology['IoU'] = np.array(self.IoU_test).tolist()
-        
+
         morphology['area'] = np.array(self.area).tolist()
         morphology['solidity'] = np.array(self.solidity).tolist()
         morphology['eccentricity'] = np.array(self.eccentricity).tolist()
@@ -1046,13 +1046,13 @@ class CustomSaver(keras.callbacks.Callback):
         morphology['solidity-diff'] = np.array(self.solidity_diff).tolist()
 
         return morphology
-        
+
     def on_epoch_end(self, epoch, logs={}):
         '''
-        At the end of each epoch, if the epoch is an even number, 
-        we save the model to a file with the name of the model, 
+        At the end of each epoch, if the epoch is an even number,
+        we save the model to a file with the name of the model,
         the epoch number, and the jaccard index
-        
+
         Args:
           epoch: The current training epoch.
           logs: (ignored)
@@ -1072,13 +1072,13 @@ class CustomSaver(keras.callbacks.Callback):
             print('Jaccard in target: '+ str(jaccard))
             self.IoU_test.append(jaccard)
             self.x.append(int(epoch))
-            
+
             #target
             gt_area_value,gt_solidity_value,gt_eccentricity_value,gt_orientation_value,gt_area_value_median,gt_object_number,gt_ratio=morphology_analysis(
-                pred_trg_masks, 
+                pred_trg_masks,
                 self.trg_x_noPadding,
                 self.trg_delta)
-        
+
             self.area.append(gt_area_value)
             self.solidity.append(gt_solidity_value)
             self.eccentricity.append(gt_eccentricity_value)
@@ -1087,7 +1087,7 @@ class CustomSaver(keras.callbacks.Callback):
             self.n_objects.append(gt_object_number)
             self.ratio.append(gt_ratio)
             self.solidity_diff.append(abs(gt_solidity_value-self.source_desired_solidity))
-            
+
             act_dif = abs(gt_solidity_value-self.source_desired_solidity)
             if act_dif < self.dif:
                 self.dif = act_dif
@@ -1096,8 +1096,8 @@ class CustomSaver(keras.callbacks.Callback):
 
     def on_train_end(self,logs={}):
         '''
-        Restore the selected model using Solidity. 
-        
+        Restore the selected model using Solidity.
+
         Store plots and csv if analysis_mode == True.
         '''
 
@@ -1126,7 +1126,7 @@ class CustomSaver(keras.callbacks.Callback):
             morphology=pd.DataFrame()
             morphology['Epochs']=self.x
             morphology['IoU']=self.IoU_test
-            
+
             morphology['area']=self.area
             morphology['solidity']=self.solidity
             morphology['eccentricity']=self.eccentricity
@@ -1141,14 +1141,14 @@ def filter_patches(img_list, lbl_list, zeros_perc = 0.5):
     '''
     If apply is True, then it will return the histogram_matching function, otherwise it will return the
     do_nothing function
-    
+
     Args:
       apply (bool): Whether to apply the transformation or not
       target_img: List of target domain images (from which mean histogram will be obtained)
       apply_prob: The probability of applying the histogram matching
-    
+
     Returns:
-      A function that takes an image as input and returns the image with the histogram matched (with given probability) 
+      A function that takes an image as input and returns the image with the histogram matched (with given probability)
       or the image itself if apply == False.
     '''
 
@@ -1191,7 +1191,7 @@ def prepare_rand_patches(image_list, label_list, n_patches):
 
 ##############################################################################################################################
 from time import time
-def train_main( source,target,       
+def train_main( source,target,
                 source_path,
                 target_path,
                 source_test_data_path,
@@ -1249,15 +1249,15 @@ def train_main( source,target,
         source_test_img, source_test_lbl = prepare_rand_patches(source_test_img, source_test_lbl, n_patches)
         target_test_img, target_test_lbl = prepare_rand_patches(target_test_img, target_test_lbl, n_patches)
 
-    # Unsupervised task (Reconstruction) data: 
-    # test images has no masks, so i put with target, inside the dataset without masks. 
+    # Unsupervised task (Reconstruction) data:
+    # test images has no masks, so i put with target, inside the dataset without masks.
     # In order to tell exactly this to the loss functions, etc.
     target_img = target_img + target_test_img
     target_lbl = target_lbl + target_test_lbl
 
     source_img = np.expand_dims(source_img, axis=-1)
     source_lbl = np.expand_dims(source_lbl, axis=-1)
-    target_img = np.expand_dims(target_img, axis=-1) 
+    target_img = np.expand_dims(target_img, axis=-1)
     target_lbl = np.expand_dims(target_lbl, axis=-1)
     source_test_img = np.expand_dims(source_test_img, axis=-1) # to be able to apply hist_match before combine with noMask set
     source_test_lbl = np.expand_dims(source_test_lbl, axis=-1) # to be able to apply hist_match before combine with noMask set
@@ -1341,7 +1341,7 @@ def train_main( source,target,
                                                             val_generator_D2,
                                                             D1_size=np.round(len(source_img) * 0.1),
                                                             D2_size=np.round(len(target_img) * 0.1))
-        
+
         train_data_size = np.round(np.round(len(source_img) * 0.9) + np.round(len(target_img) * 0.9) + np.round(len(source_test_img) * 0.9))
         val_data_size = np.round(  np.round(len(source_img) * 0.1) + np.round(len(target_img) * 0.1) + np.round(len(source_test_img) * 0.1))
         print("source domain ready")
@@ -1353,10 +1353,10 @@ def train_main( source,target,
 
     # create the network and compile it with its optimizer
     if model_name == 'Att_YNet':
-        model = Att_YNet(image_shape = input_shape, 
-                        activation=activation, 
+        model = Att_YNet(image_shape = input_shape,
+                        activation=activation,
                         feature_maps=[num_filters*2**i for i in range(5)],
-                        drop_values=dropout_value, 
+                        drop_values=dropout_value,
                         spatial_dropout=spatial_dropout)
 
     if optimizer_name == 'SGD':
@@ -1374,7 +1374,7 @@ def train_main( source,target,
         bce = new_multitask_seg_loss #'binary_crossentropy' #
         loss_funct = {"img": mse, "mask": bce}
 
-    eval_metric = {"img": [], 
+    eval_metric = {"img": [],
                 "mask": [new_jaccard]}
 
 
@@ -1384,11 +1384,11 @@ def train_main( source,target,
 
     if freeze:
         # freeze shared encoder
-        for layer in model.layers: 
+        for layer in model.layers:
             layer.trainable = False
             if layer.name == f_layer: # bottle_neck, fork
                 break
-        
+
         for layer in model.layers:
             if layer.name[:3] == 'AE_':
                 #freeze autoencoder decoder
@@ -1403,7 +1403,7 @@ def train_main( source,target,
     model.compile(optimizer=optim, loss=loss_funct, metrics=eval_metric, loss_weights = {"img": alpha, "mask": beta})
 
     if use_custom_callback:
-        
+
         if os.path.exists(cc_path):
             shutil.rmtree(cc_path) #remove previous content
         create_dir(cc_path)
@@ -1480,7 +1480,7 @@ def test(model, data_path, batch_size_value, ):
     mse = []
     for i in range(0, len(preds_test)):
         iou.append( jaccard_index(Y_test_noPadd[i], pred_masks[i]) )
-        mse.append( mean_squared_error(X_test_noPadd[i], pred_reconst[i]) ) 
+        mse.append( mean_squared_error(X_test_noPadd[i], pred_reconst[i]) )
     mean_iou = np.mean(iou)
     mean_mse = np.mean(mse)
 
